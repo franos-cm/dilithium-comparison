@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 module adapter_low_res (
     // High perf interface
     input  logic         clk,
@@ -10,7 +12,7 @@ module adapter_low_res (
     // output logic         valid_o,
     // input  logic         ready_o,
     // output logic [31:0]  data_o,
-    output logic         done_o,
+    output logic         done,
 
     // Low res interface, inverted
     output  logic [3:0]   op_in,
@@ -78,7 +80,7 @@ module adapter_low_res (
     always_comb begin
         op_in = 0;
         op_valid_in = 0;
-        done_o = 0;
+        done = 0;
 
         unique case (current_state)
             // Initial state
@@ -116,7 +118,7 @@ module adapter_low_res (
             end
             KEYGEN_DUMP_PK: begin
                 next_state = ready_out ? IDLE : KEYGEN_DUMP_PK;
-                done_o = ready_out;
+                done = ready_out;
             end
 
             default: next_state = IDLE;

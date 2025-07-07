@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module countern #(
+module counterm #(
     parameter int WIDTH = 32
 ) (
     input  logic  clk,

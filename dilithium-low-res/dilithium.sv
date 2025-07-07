@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 module dilithium_low_res #(
     parameter SEC_LEVEL = 2
 )(
@@ -11,7 +13,7 @@ module dilithium_low_res #(
     output logic         valid_o,
     input  logic         ready_o,
     output logic [31:0]  data_o,
-    output logic         done_o,
+    output logic         done,
 );
 
     logic [3:0]   op_in;
@@ -40,7 +42,7 @@ module dilithium_low_res #(
         .op_in   (op_in),
         .op_valid_in (op_valid_in),
         .ready_out (ready_out),
-        .done_o (done_o)
+        .done (done)
     );
 
     generate

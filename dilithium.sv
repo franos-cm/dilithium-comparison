@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 module dilithium #(
     parameter HIGH_PERF = 1,
     parameter SEC_LEVEL = 2,
@@ -7,14 +9,30 @@ module dilithium #(
     input  logic         rst,
     input  logic         start,
     input  logic [1:0]   mode,
+    output logic         done,
     input  logic         valid_i,
     output logic         ready_i,
     input  logic [W-1:0] data_i,
     output logic         valid_o,
     input  logic         ready_o,
-    output logic [W-1:0] data_o,
-    output logic         done_o
+    output logic [W-1:0] data_o
 );
+    logic start_strobe;
+    logic done_strobe;
+
+    edge_detector start_detector (
+        .clk  (clk),
+        .rst  (rst),
+        .signal_in(start),
+        .rising_edge(start_strobe)
+    );
+
+    latch done_latch (
+        .clk  (clk),
+        .rst  (rst),
+        .set(done_strobe),
+        .q(done)
+    );
 
     // Wires for intermediate signals
     generate
@@ -22,7 +40,7 @@ module dilithium #(
             dilithium_high_perf high_perf_instance (
                 .clk(clk),
                 .rst(rst),
-                .start(start),
+                .start(start_strobe),
                 .mode(mode),
                 .sec_lvl(3'SEC_LEVEL),
                 .valid_i(valid_i),
@@ -31,7 +49,7 @@ module dilithium #(
                 .valid_o(valid_o),
                 .ready_o(ready_o),
                 .data_o(data_o),
-                .done_o (done_o)
+                .done(done_strobe)
             );
         end
         else begin
@@ -40,16 +58,16 @@ module dilithium #(
             )
             low_res_instance (
                 .clk(clk),
-                .op_in(op_in),
-                .op_valid_in(op_valid_in),
-                .ready_out(ready_out),
-                .data_in(data_in),
-                .ready_rcv_in(ready_rcv_in),
-                .valid_in(valid_in),
-                .data_out(data_out),
-                .ready_rcv_out(ready_rcv_out),
-                .valid_out(valid_out),
-                .done_o (done_o)
+                .rst(rst),
+                .start(start_strobe),
+                .mode(mode),
+                .valid_i(valid_i),
+                .ready_i(ready_i),
+                .data_i(data_i),
+                .valid_o(valid_o),
+                .ready_o(ready_o),
+                .data_o(data_o),
+                .done(done_strobe)
             );
         end
     endgenerate

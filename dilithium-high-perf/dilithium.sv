@@ -12,23 +12,16 @@ module dilithium_high_perf (
     output logic           valid_o,
     input  logic           ready_o,
     output logic[63:0]     data_o,
+    output logic           done,
     output logic           last
 );
-    logic start_strobe;
     logic dilithium_valid_o, dilithium_ready_o;
     logic [63:0] dilithium_data_o;
-
-    edge_detector start_detector (
-        .clk  (clk),
-        .rst  (rst),
-        .signal_in(start),
-        .rising_edge(start_strobe)
-    );
 
     adapter_high_perf adapter (
         .clk     (clk),
         .rst     (rst),
-        .start   (start_strobe),
+        .start   (start),
         .mode    (mode),
         .sec_lvl (sec_lvl),
         .dilithium_valid_o (dilithium_valid_o),
@@ -37,13 +30,14 @@ module dilithium_high_perf (
         .valid_o (valid_o),
         .ready_o (ready_o),
         .data_o (data_o),
+        .done (done),
         .last (last)
     );
 
     combined_top top (
         .clk     (clk),
         .rst     (rst),
-        .start   (start_strobe),
+        .start   (start),
         .mode    (mode),
         .sec_lvl (sec_lvl),
         .valid_i (valid_i),

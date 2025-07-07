@@ -72,7 +72,8 @@ module adapter_high_perf #(
     output logic           valid_o,
     input  logic           ready_o,
     output logic [w-1:0]   data_o,
-    output logic           last
+    output logic           done,
+    output logic           last // AXI-Stream LAST_T
 
 
 );
@@ -101,7 +102,7 @@ module adapter_high_perf #(
     );
 
     // Output size counter
-    countern #(
+    counterm #(
         .WIDTH(max_output_width) 
     ) output_counter (
         .clk (clk),
@@ -141,6 +142,7 @@ module adapter_high_perf #(
     end;
 
     assign valid_o = !buffer_empty;
+    assign done = output_done;
     assign last = output_done && last_word_in_buffer;
 
 endmodule
