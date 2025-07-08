@@ -17,17 +17,17 @@ use UNISIM.vcomponents.all;
 
 library work;
 use work.dilithium_v.all;
-use work.interfaces.all;
+use work.interfaces_v.all;
 
-entity red_dsp_2 is
+entity red_dsp_2_v is
     port (
         clk : in std_logic;
         d   : in red_dsp_2_in_type;
         q   : out red_dsp_2_out_type
     );
-end red_dsp_2;
+end red_dsp_2_v;
 
-architecture Behavioral of red_dsp_2 is
+architecture Behavioral of red_dsp_2_v is
     signal ALUMODE : std_logic_vector(3 downto 0);
     signal INMODE : std_logic_vector(4 downto 0);
     signal OPMODE : std_logic_vector(6 downto 0);
@@ -46,7 +46,7 @@ begin
     DD(22 downto 0) <= d.d;
               
     -- delay C
-    delay_c: entity work.dyn_shift_reg
+    delay_c: entity work.dyn_shift_reg_v
     generic map (width => 24, max_depth => 1)
     port map (
         clk => clk,

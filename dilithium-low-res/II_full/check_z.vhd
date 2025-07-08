@@ -14,18 +14,18 @@ use IEEE.NUMERIC_STD.ALL;
 
 library work;
 use work.dilithium_ii.all;
-use work.interfaces.all;
+use work.interfaces_ii.all;
 use work.memmap_ii.all;
 
-entity check_z is
+entity check_z_ii is
     Port (
         clk : in std_logic;
         d   : in check_z_in_type;
         q   : out check_z_out_type
     );
-end check_z;
+end check_z_ii;
 
-architecture Behavioral of check_z is
+architecture Behavioral of check_z_ii is
 
 type state_type is (idle, check, check_enabled, check_finish, finished_good, finished_bad);
 signal state, nextstate : state_type;
@@ -86,7 +86,7 @@ generate
     else '0';
 end generate;
 
-md: entity work.dyn_shift_reg
+md: entity work.dyn_shift_reg_ii
 generic map (width => 1, max_depth => GLOBAL_MEMORY_DELAY)
 port map (
     clk => clk,
@@ -120,7 +120,7 @@ begin
     end case;
 end process;
 
-memory_counter: entity work.counter
+memory_counter: entity work.counter_ii
 generic map (max_value => DILITHIUM_k*DILITHIUM_N/4-1)
 port map (
     clk => clk,

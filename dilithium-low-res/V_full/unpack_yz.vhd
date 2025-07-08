@@ -13,9 +13,9 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 library work;
 use work.dilithium_v.all;
-use work.interfaces.all;
+use work.interfaces_v.all;
 
-entity fifo is
+entity fifo_v is
     Generic (
         input_length : natural := 32;
         output_length : natural := 40;
@@ -28,9 +28,9 @@ entity fifo is
         q   : out fifo_out_type;
         dataq : out std_logic_vector(output_length-1 downto 0)
     );
-end fifo;
+end fifo_v;
 
-architecture Behavioral of fifo is
+architecture Behavioral of fifo_v is
 
     type state_type is (idle, load, store);
     signal state, nextstate : state_type;
@@ -63,7 +63,7 @@ begin
 end process;
 dataq <= bufreg(output_length-1 downto 0);
 
-load_counter: entity work.counter
+load_counter: entity work.counter_v
 generic map (max_value => buf_width/input_length-1)
 port map (
     clk => clk,
@@ -72,7 +72,7 @@ port map (
     value => open
 );
 
-store_counter: entity work.counter
+store_counter: entity work.counter_v
 generic map (max_value => buf_width/output_length-1)
 port map (
     clk => clk,

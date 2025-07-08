@@ -15,18 +15,18 @@ use ieee.math_real.all;
 
 library work;
 use work.dilithium_iii.all;
-use work.interfaces.all;
+use work.interfaces_iii.all;
 use work.memmap_iii.all;
 
-entity expand_y is
+entity expand_y_iii is
     Port (
         clk : in std_logic;
         d   : in expand_y_in_type;
         q   : out expand_y_out_type
     );
-end expand_y;
+end expand_y_iii;
 
-architecture Behavioral of expand_y is
+architecture Behavioral of expand_y_iii is
 
     constant SREG_WIDTH : natural := 288 - (DILITHIUM_loggamma1/19)*128; -- 288 for gamma=2**17, 160 for 2**19
 
@@ -40,12 +40,12 @@ architecture Behavioral of expand_y is
     -- address tmp
     signal addr, addr_bitrev : coef_addr_array(0 to 3);
     
-    -- l counter
+    -- l counter_iii
     signal lcntd : counter_in_type;
     signal lcntq : counter_out_type;
     signal lcnt : natural range 0 to DILITHIUM_l-1;
     
-    -- absorb counter
+    -- absorb counter_iii
     signal abscntd : counter_in_type;
     signal abscntq : counter_out_type;
     signal abscnt : natural range 0 to SHAKE256_RATE/32;
@@ -56,13 +56,13 @@ architecture Behavioral of expand_y is
     signal memcnt : natural range 0 to DILITHIUM_N/4-1;
     signal memcnt_delayed : std_logic_vector(7 downto 0); -- 6 is en, 7 is ovf
     
-    -- squeeze counter
+    -- squeeze counter_iii
     constant SQZCNT_MAX : natural := (SHAKE256_RATE/32)-1;
     signal sqzcntd : counter_in_type;
     signal sqzcntq : counter_out_type;
     signal sqzcnt : natural range 0 to SQZCNT_MAX := 0;
     
-    -- keccak
+    -- keccak_iii
     signal keccak_din : std_logic_vector(31 downto 0);
     
     -- memory
@@ -71,8 +71,8 @@ architecture Behavioral of expand_y is
 begin
 
 
--- l counter
-lcounter: entity work.counter
+-- l counter_iii
+lcounter: entity work.counter_iii
 generic map (max_value => DILITHIUM_l-1)
 port map (
     clk => clk,
@@ -98,8 +98,8 @@ q.convertyzd.data <= current_sample;
 current_sample_converted <= d.convertyzq;
 
 
--- memory counter: offset for the coefficients that go into memory
-memory_counter: entity work.counter
+-- memory counter_iii: offset for the coefficients that go into memory
+memory_counter: entity work.counter_iii
 generic map (max_value => DILITHIUM_N/4-1)
 port map (
     clk => clk,
@@ -110,7 +110,7 @@ port map (
 
 
 
-absorb_counter: entity work.counter
+absorb_counter: entity work.counter_iii
 generic map (max_value => SHAKE128_RATE/32)
 port map (
     clk => clk,
@@ -151,8 +151,8 @@ end process;
 
 
 
--- squeeze counter
-squeeze_counter: entity work.counter
+-- squeeze counter_iii
+squeeze_counter: entity work.counter_iii
 generic map (max_value => SQZCNT_MAX)
 port map (
     clk => clk,
@@ -161,7 +161,7 @@ port map (
     value => sqzcnt
 );
 
--- keccak
+-- keccak_iii
 q.keccakd.data <= keccak_din when abscntd.en = '1' else d.keccakq.data;
 
 
@@ -186,7 +186,7 @@ generate
     end generate;
 end generate;
 
-delay_memcnt: entity work.dyn_shift_reg
+delay_memcnt: entity work.dyn_shift_reg_iii
 generic map (width => 8, max_depth => DELAY_CONV_YZ)
 port map (
     clk => clk,
@@ -252,7 +252,7 @@ begin
             -- memory deactivated in idle state
             mem <= '0';
             
-            -- keccak and memory
+            -- keccak_iii and memory
             q.keccakd.en <= '0';
             q.keccakd.rst <= '1';
             
@@ -277,7 +277,7 @@ begin
             end if;
             
         when absorb =>
-            -- keccak and memory
+            -- keccak_iii and memory
             q.keccakd.en <= '1';
             q.keccakd.rst <= '0';
             
@@ -299,7 +299,7 @@ begin
             end if;
             
         when zeropad =>
-            -- keccak and memory
+            -- keccak_iii and memory
             q.keccakd.en <= '1';
             q.keccakd.rst <= '0';
             
@@ -321,7 +321,7 @@ begin
             end if;
             
         when permute =>
-            -- keccak and memory
+            -- keccak_iii and memory
             q.keccakd.en <= '0';
             q.keccakd.rst <= '0';
             
@@ -343,7 +343,7 @@ begin
             end if;
             
         when squeeze =>
-            -- keccak and memory
+            -- keccak_iii and memory
             q.keccakd.en <= '1';
             q.keccakd.rst <= '0';
             
@@ -369,11 +369,11 @@ begin
                 nextstate <= zeropad;
             elsif d.fifoyzq.toggle = '1'
             then
-                nextstate <= sample; -- wait for reading SREG_WIDTH/32 from keccak
+                nextstate <= sample; -- wait for reading SREG_WIDTH/32 from keccak_iii
             end if;
             
         when sample =>
-            -- keccak and memory
+            -- keccak_iii and memory
             q.keccakd.en <= '0';
             q.keccakd.rst <= '0';
             
@@ -405,7 +405,7 @@ begin
             end if;
             
         when reset_absorb =>
-            -- keccak and memory
+            -- keccak_iii and memory
             q.keccakd.en <= '0';
             q.keccakd.rst <= '1';
             

@@ -82,6 +82,7 @@ module sampler_a_ext #(
         rst_a      = 0;
         SEED_SIPO  = 0;
         sample_ctr = 0;
+        valid_o    = 0;
         
     end    
         

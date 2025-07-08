@@ -29,7 +29,7 @@ module tb_keygen_top;
     reg clk = 1,  rst = 0, start = 0;
     reg [2:0] sec_lvl = 2;
       
-    localparam  NUM_TV = 5;
+    localparam  NUM_TV = 1;
 
       
     reg [1:0] mode = 0;
@@ -38,19 +38,22 @@ module tb_keygen_top;
     wire ready_i, valid_o;
     reg  [63:0] data_i;  
     wire [63:0] data_o;
-    
-    combined_top DUT (
-        clk,
-        rst,
-        start,
-        mode,
-        sec_lvl,
-        valid_i,
-        ready_i,
-        data_i,
-        valid_o,
-        ready_o,
-        data_o
+
+    dilithium #(
+        .HIGH_PERF(0),
+        .SEC_LEVEL(2)
+    )
+    dut (
+        .clk (clk),
+        .rst (rst),
+        .start (start),
+        .mode (mode),
+        .valid_i (valid_i),
+        .ready_i (ready_i),
+        .data_i (data_i),
+        .valid_o (valid_o),
+        .ready_o (ready_o),
+        .data_o (data_o)
     );
   
     reg [255:0] seed [NUM_TV-1:0];
@@ -99,31 +102,31 @@ module tb_keygen_top;
      reg [3:0] state = 0;    
   
     initial begin
-        $readmemh("z_2.txt",  seed);
+        $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/seed.txt",  seed);
     
-        $readmemh("s1_2.txt",  s1_2);
-        $readmemh("s2_2.txt",  s2_2);
-        $readmemh("t0_2.txt",   t0_2);
-        $readmemh("t1_2.txt",  t1_2);
-        $readmemh("k_2.txt",   k_2);
-        $readmemh("rho_2.txt", rho_2);
-        $readmemh("tr_2.txt",  tr_2);
+        $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/s1_2.txt",  s1_2);
+        $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/s2_2.txt",  s2_2);
+        $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/t0_2.txt",   t0_2);
+        $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/t1_2.txt",  t1_2);
+        $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/k_2.txt",   k_2);
+        $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/rho_2.txt", rho_2);
+        $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/tr_2.txt",  tr_2);
         
-        $readmemh("s1_3.txt",  s1_3);
-        $readmemh("s2_3.txt",  s2_3);
-        $readmemh("t0_3.txt",   t0_3);
-        $readmemh("t1_3.txt",  t1_3);
-        $readmemh("k_3.txt",   k_3);
-        $readmemh("rho_3.txt", rho_3);
-        $readmemh("tr_3.txt",  tr_3);
+        $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/s1_3.txt",  s1_3);
+        $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/s2_3.txt",  s2_3);
+        $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/t0_3.txt",   t0_3);
+        $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/t1_3.txt",  t1_3);
+        $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/k_3.txt",   k_3);
+        $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/rho_3.txt", rho_3);
+        $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/tr_3.txt",  tr_3);
         
-        $readmemh("s1_5.txt",  s1_5);
-        $readmemh("s2_5.txt",  s2_5);
-        $readmemh("t0_5.txt",   t0_5);
-        $readmemh("t1_5.txt",  t1_5);
-        $readmemh("k_5.txt",   k_5);
-        $readmemh("rho_5.txt", rho_5);
-        $readmemh("tr_5.txt",  tr_5);
+        $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/s1_5.txt",  s1_5);
+        $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/s2_5.txt",  s2_5);
+        $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/t0_5.txt",   t0_5);
+        $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/t1_5.txt",  t1_5);
+        $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/k_5.txt",   k_5);
+        $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/rho_5.txt", rho_5);
+        $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/tr_5.txt",  tr_5);
         
         valid_i = 0;
         ready_o = 0;
@@ -285,6 +288,7 @@ module tb_keygen_top;
                     c <= 0;
                     sec_lvl <= 3;
                     $display ("Moving to KG3");
+                    $finish;
                 end
             end
             endcase

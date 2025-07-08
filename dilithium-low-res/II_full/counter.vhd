@@ -14,9 +14,9 @@ use IEEE.NUMERIC_STD.ALL;
 
 library work;
 use work.dilithium_ii.all;
-use work.interfaces.all;
+use work.interfaces_ii.all;
 
-entity counter is
+entity counter_ii is
     Generic (
         max_value : natural := 1023
     );
@@ -26,35 +26,37 @@ entity counter is
         q   : out counter_out_type;
         value : out natural range 0 to max_value
     );
-end counter;
+end counter_ii;
 
-architecture Behavioral of counter is
+architecture Behavioral of counter_ii is
 
 signal cnt, nextcnt : natural range 0 to max_value;
+signal q_internal   : counter_out_type;
 
 begin
 
 value <= cnt;
 nextcnt <= cnt + 1;
-counter: process(clk)
+q <= q_internal;
+counter_ii: process(clk)
 begin
     if rising_edge(clk)
     then
       if d.rst = '1'
       then
         cnt <= 0;
-        q.ovf <= '0';
-        q.max <= '0';
-      elsif q.ovf = '0' and d.en = '1'
+        q_internal.ovf <= '0';
+        q_internal.max <= '0';
+      elsif q_internal.ovf = '0' and d.en = '1'
       then
-        q.max <= '0';
+        q_internal.max <= '0';
         if cnt = max_value - 1
         then
-            q.max <= '1';
+            q_internal.max <= '1';
         end if;
         if cnt = max_value
         then
-            q.ovf <= '1';
+            q_internal.ovf <= '1';
         else
             cnt <= nextcnt;
         end if;

@@ -14,18 +14,18 @@ use IEEE.NUMERIC_STD.ALL;
 
 library work;
 use work.dilithium_ii.all;
-use work.interfaces.all;
+use work.interfaces_ii.all;
 use work.memmap_ii.all;
 
-entity ballsample is
+entity ballsample_ii is
     Port (
         clk : in std_logic;
         d   : in ballsample_in_type;
         q   : out ballsample_out_type
     );
-end ballsample;
+end ballsample_ii;
 
-architecture Behavioral of ballsample is
+architecture Behavioral of ballsample_ii is
 
     type state_type is (idle, rst_keccak, absorb, padding_start, padding_mid, padding_end, zeropad, zeropad_squeeze, permute, permute_squeeze, squeeze_sign_low, squeeze_sign_high, squeeze, sample, shuffle, insert, write);
     signal state, nextstate : state_type;
@@ -70,7 +70,7 @@ architecture Behavioral of ballsample is
 begin
 
 -- memory stuff
-memory_counter: entity work.counter
+memory_counter: entity work.counter_ii
 generic map (max_value => DILITHIUM_N/4-1)
 port map (
     clk => clk,
@@ -113,7 +113,7 @@ begin
 end process;
 
 
-sample_counter: entity work.counter
+sample_counter: entity work.counter_ii
 generic map (max_value => 3)
 port map (
     clk => clk,
@@ -123,7 +123,7 @@ port map (
 );
 current_sample <= d.keccakq.data(31-samplecnt*8 downto 32-samplecnt*8-8);
 
-tau_counter: entity work.counter
+tau_counter: entity work.counter_ii
 generic map (max_value => DILITHIUM_tau-1)
 port map (
     clk => clk,
@@ -133,7 +133,7 @@ port map (
 );
 rejection_threshold <= 256-DILITHIUM_tau+taucnt;
 
-nonzero_counter: entity work.counter
+nonzero_counter: entity work.counter_ii
 generic map (max_value => DILITHIUM_tau)
 port map (
     clk => clk,
@@ -142,7 +142,7 @@ port map (
     value => posreg_depth
 );
 
-posreg: entity work.dyn_shift_reg
+posreg: entity work.dyn_shift_reg_ii
 generic map (width => 9, max_depth => DILITHIUM_tau)
 port map (
     clk => clk,
@@ -152,7 +152,7 @@ port map (
     q => posreg_out
 );
 
-rotation_counter: entity work.counter
+rotation_counter: entity work.counter_ii
 generic map (max_value => DILITHIUM_tau-1)
 port map (
     clk => clk,
@@ -187,7 +187,7 @@ begin
 end process;
 signbit_out <= signbits(0);
 
-sha_counter: entity work.counter
+sha_counter: entity work.counter_ii
 generic map (max_value => SHAKE128_RATE/32-1)
 port map (
     clk => clk,
@@ -223,7 +223,7 @@ begin
     
     q.ready <= '0';
     
-    -- counter
+    -- counter_ii
     shacntd.en <= '0';
     shacntd.rst <= '0';
     samplecntd.en <= '0';
@@ -237,7 +237,7 @@ begin
     memcntd.en <= '1'; -- exception since this enables zeroizing the c memory in the background
     memcntd.rst <= '0';
     
-    -- keccak
+    -- keccak_ii
     q.keccakd.en <= '0';
     q.keccakd.rst <= '0';
     

@@ -14,17 +14,17 @@ use IEEE.NUMERIC_STD.ALL;
 
 library work;
 use work.dilithium_ii.all;
-use work.interfaces.all;
+use work.interfaces_ii.all;
 
-entity digest_msg is
+entity digest_msg_ii is
 Port (
     clk : in std_logic;
     d   : in digest_msg_in_type;
     q   : out digest_msg_out_type
 );
-end digest_msg;
+end digest_msg_ii;
 
-architecture Behavioral of digest_msg is
+architecture Behavioral of digest_msg_ii is
 
     type state_type is (idle, absorb_tr, rcv, absorb, zeropad, zeropad_squeeze, permute, padding_start, padding_finish, permute_squeeze, squeeze, reset);
     signal state, nextstate : state_type;
@@ -93,7 +93,7 @@ begin
     end if;
 end process;
 
-sha_counter: entity work.counter
+sha_counter: entity work.counter_ii
 generic map (max_value => SHAKE256_RATE/32-1)
 port map (
     clk => clk,

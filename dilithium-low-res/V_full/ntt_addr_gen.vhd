@@ -14,19 +14,19 @@ use IEEE.NUMERIC_STD.ALL;
 
 library work;
 use work.dilithium_v.all;
-use work.interfaces.all;
+use work.interfaces_v.all;
 
-entity ntt_addr_gen is
+entity ntt_addr_gen_v is
     Port (
         clk : in std_logic;
         d : in ntt_addr_gen_in_type;
         q : out ntt_addr_gen_out_type
     );
-end ntt_addr_gen;
+end ntt_addr_gen_v;
 
-architecture Behavioral of ntt_addr_gen is
+architecture Behavioral of ntt_addr_gen_v is
 
-signal counter : natural range 0 to 511;
+signal counter_v : natural range 0 to 511;
 signal stage : natural range 0 to 7;
 signal counter_vec : std_logic_vector(8 downto 0);
 
@@ -44,7 +44,7 @@ begin
     then
         if d.rst = '1'
         then
-            counter <= 0;
+            counter_v <= 0;
             if d.inv = '0'
             then
                 stage <= 0;
@@ -58,15 +58,15 @@ begin
         elsif d.en='1' and done_internal = '0'
         then
             q.ready <= '0';
-            counter <= counter + 1;
+            counter_v <= counter_v + 1;
             if stage = 7
             then
                 omega_counter <= omega_counter + 2;
-            elsif ((counter+1) mod (2**(6-stage))) = 0
+            elsif ((counter_v+1) mod (2**(6-stage))) = 0
             then
                 omega_counter <= omega_counter + 1;
             end if;
-            if ((counter+1) mod 64) = 0
+            if ((counter_v+1) mod 64) = 0
             then
                 if d.inv = '0'
                 then
@@ -86,12 +86,12 @@ begin
                         q.ready <= '1';
                     end if;
                 end if; -- inv '1'
-            end if; -- counter = 63
+            end if; -- counter_v = 63
         end if; -- en = '1' and done_internal='0'
     end if; -- clk
 end process;
 
-counter_vec <= std_logic_vector(to_unsigned(counter, counter_vec'length));
+counter_vec <= std_logic_vector(to_unsigned(counter_v, counter_vec'length));
 
 raw_addr_gen: for i in 0 to 3
 generate
@@ -127,7 +127,7 @@ generate
     q.addr(i) <= raw_addr(i)(15-stage downto 8-stage);
 end generate;
 
-q.twiddlectrl.en(0) <= '1' when counter = 0 or stage = 7 or (counter mod (2**(6-stage))) = 0 else '0';
+q.twiddlectrl.en(0) <= '1' when counter_v = 0 or stage = 7 or (counter_v mod (2**(6-stage))) = 0 else '0';
 q.twiddlectrl.en(1) <= '1' when stage = 7 else '0';
 q.twiddlectrl.addr(0)(7 downto 0) <= std_logic_vector(to_unsigned(omega_counter, 8));
 q.twiddlectrl.addr(1)(7 downto 0) <= std_logic_vector(to_unsigned(omega_counter + 1, 8));

@@ -14,18 +14,18 @@ use IEEE.NUMERIC_STD.ALL;
 
 library work;
 use work.dilithium_iii.all;
-use work.interfaces.all;
+use work.interfaces_iii.all;
 use work.memmap_iii.all;
 
-entity crh_rho_t1 is
+entity crh_rho_t1_iii is
     Port (
         clk : in std_logic;
         d   : in crh_rho_t1_in_type;
         q   : out crh_rho_t1_out_type
     );
-end crh_rho_t1;
+end crh_rho_t1_iii;
 
-architecture Behavioral of crh_rho_t1 is
+architecture Behavioral of crh_rho_t1_iii is
 
     constant MEMORY_DELAY : natural := GLOBAL_MEMORY_DELAY;
 
@@ -138,10 +138,10 @@ end generate;
 
 
 
--- counter
+-- counter_iii
 -- counts total number of coefficients read
 -- overflow when all are read
-memory_counter: entity work.counter
+memory_counter: entity work.counter_iii
 generic map (max_value => DILITHIUM_k*DILITHIUM_N/4-1)
 port map (
     clk => clk,
@@ -150,9 +150,9 @@ port map (
     value => memcnt
 );
 
--- counts total number of 32-bit words shifted into keccak
+-- counts total number of 32-bit words shifted into keccak_iii
 -- overflow when current block is absorbed and permutation starts
-absorb_counter: entity work.counter 
+absorb_counter: entity work.counter_iii 
 generic map (max_value => SHAKE256_RATE/32-1)
 port map (
     clk => clk,
@@ -161,7 +161,7 @@ port map (
     value => abscnt
 );
 
-absorb_reg_counter: entity work.counter 
+absorb_reg_counter: entity work.counter_iii 
 generic map (max_value => 160/32-1)
 port map (
     clk => clk,
@@ -170,8 +170,8 @@ port map (
     value => open
 );
 
--- counts number of 32-bit words of rho to be absorbed into keccak
-absorb_rho_counter: entity work.counter
+-- counts number of 32-bit words of rho to be absorbed into keccak_iii
+absorb_rho_counter: entity work.counter_iii
 generic map (max_value => 256/32-1)
 port map (
     clk => clk,
@@ -180,8 +180,8 @@ port map (
     value => open
 );
 
--- read counter
-read_counter: entity work.counter
+-- read counter_iii
+read_counter: entity work.counter_iii
 generic map (max_value => 160/40+MEMORY_DELAY-1)
 port map (
     clk => clk,
@@ -192,7 +192,7 @@ port map (
 
 
 
-squeeze_counter: entity work.counter
+squeeze_counter: entity work.counter_iii
 generic map (max_value => 256/32-1)
 port map (
     clk => clk,
@@ -211,7 +211,7 @@ q.trregd.data <= d.keccakq.data;
 q.rhoregd.en_write <= '0'; -- read only
 q.rhoregd.data <= (others => '0');
 
--- keccak
+-- keccak_iii
 with state
 select
     q.keccakd.data <= d.rhoregq.data when absorb_rho,
@@ -247,7 +247,7 @@ begin
     absorbreg_read_en <= '0';
     absorbreg_absorb_en <= '0';
     
-    -- counter
+    -- counter_iii
     rhoabscntd.rst <= '0';
     rhoabscntd.en <= '0';
     memcntd.rst <= '0';
@@ -261,7 +261,7 @@ begin
     readcntd.rst <= '0';
     readcntd.en <= '0';
     
-    -- keccak
+    -- keccak_iii
     q.keccakd.en <= '0';
     q.keccakd.rst <= '0';
     
@@ -294,11 +294,11 @@ begin
             -- rho ctrl
             q.rhoregd.en_rotate <= '1';
             
-            -- counter
+            -- counter_iii
             rhoabscntd.en <= '1';
             abscntd.en <= '1';
             
-            -- keccak
+            -- keccak_iii
             q.keccakd.en <= '1';
             
             if rhoabscntq.max = '1'
@@ -307,7 +307,7 @@ begin
             end if;
         
         when read => 
-            -- counter
+            -- counter_iii
             readcntd.en <= '1';
             absregcntd.rst <= '1';
             
@@ -326,12 +326,12 @@ begin
             end if;
         
         when absorb =>
-            -- counter
+            -- counter_iii
             abscntd.en <= '1';
             absregcntd.en <= '1';
             readcntd.rst <= '1';
         
-            -- keccak
+            -- keccak_iii
             q.keccakd.en <= '1';
             
             -- absorb reg ctrl
@@ -351,7 +351,7 @@ begin
             end if;
         
         when zeropad =>
-            -- keccak
+            -- keccak_iii
             q.keccakd.en <= '1';
             
             if d.keccakq.ready = '0' -- permutation started
@@ -360,7 +360,7 @@ begin
             end if;
         
         when zeropad_squeeze =>
-            -- keccak
+            -- keccak_iii
             q.keccakd.en <= '1';
             
             if d.keccakq.ready = '0' -- permutation started
@@ -369,19 +369,19 @@ begin
             end if;
         
         when padding_start =>
-            -- counter
+            -- counter_iii
             abscntd.en <= '1';
             
-            -- keccak
+            -- keccak_iii
             q.keccakd.en <= '1';
             
             nextstate <= padding_mid;
         
         when padding_mid =>
-            -- counter
+            -- counter_iii
             abscntd.en <= '1';
             
-            -- keccak
+            -- keccak_iii
             q.keccakd.en <= '1';
             
             if abscnt = SHAKE256_RATE/32-2
@@ -390,19 +390,19 @@ begin
             end if;
         
         when padding_end =>
-            -- counter
+            -- counter_iii
             abscntd.en <= '1';
             
-            -- keccak
+            -- keccak_iii
             q.keccakd.en <= '1';
             
             nextstate <= zeropad_squeeze;
             
         when permute =>
-            -- keccak
+            -- keccak_iii
             q.keccakd.en <= '0';
             
-            -- counter
+            -- counter_iii
             abscntd.rst <= '1';
             
             if d.keccakq.ready = '1'
@@ -419,10 +419,10 @@ begin
             end if;
             
         when permute_squeeze =>
-            -- keccak
+            -- keccak_iii
             q.keccakd.en <= '0';
             
-            -- counter
+            -- counter_iii
             abscntd.rst <= '1';
             
             if d.keccakq.ready = '1'
@@ -431,10 +431,10 @@ begin
             end if;
             
         when squeeze =>
-            -- counter
+            -- counter_iii
             sqzcntd.en <= '1';
             
-            -- keccak
+            -- keccak_iii
             q.keccakd.en <= '1';
             
             -- tr register

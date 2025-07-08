@@ -17,17 +17,17 @@ use UNISIM.vcomponents.all;
 
 library work;
 use work.dilithium_ii.all;
-use work.interfaces.all;
+use work.interfaces_ii.all;
 
-entity red_dsp_3 is
+entity red_dsp_3_ii is
     port (
         clk : in std_logic;
         d   : in red_dsp_3_in_type;
         q   : out red_dsp_3_out_type
     );
-end red_dsp_3;
+end red_dsp_3_ii;
 
-architecture Behavioral of red_dsp_3 is
+architecture Behavioral of red_dsp_3_ii is
     signal ALUMODE : std_logic_vector(3 downto 0);
     signal INMODE : std_logic_vector(4 downto 0);
     signal OPMODE : std_logic_vector(6 downto 0);

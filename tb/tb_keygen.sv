@@ -1,13 +1,14 @@
 `timescale 1ns / 1ps
-`define P 10
 
 module tb_keygen;
+    localparam P = 10;
     localparam SEC_LEVEL = 2;
     localparam MODE = 0;
-    localparam  NUM_TV = 5;
-    localparam HIGH_PERF = 1;
+    localparam NUM_TV = 1;
+    localparam HIGH_PERF = 0;
     localparam W = (HIGH_PERF) ? 64 : 32;
 
+    logic tb_rst;
     logic [1:0] mode = MODE;
     logic rst, start, done;
     logic clk = 1;
@@ -63,21 +64,21 @@ module tb_keygen;
     typedef enum logic [3:0] {
         S_INIT, S_START, S_Z, S_RHO, S_K,
         S_S1, S_S2, S_T1, S_T0, S_TR,
-        S_STALL = 14, S_STOP  = 15
+        S_STALL, S_STOP
     } state_t;
 
     state_t state;   
   
     initial begin
-        $readmemh("seed.txt",  seed);
+        $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/seed.txt",  seed);
         if (SEC_LEVEL == 2) begin
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/s1.txt",  s1);
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/s2.txt",  s2);
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/t0.txt",   t0);
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/t1.txt",  t1);
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/k.txt",   k);
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/rho.txt", rho);
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/tr.txt",  tr);
+            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/s1_2.txt",  s1);
+            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/s2_2.txt",  s2);
+            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/t0_2.txt",   t0);
+            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/t1_2.txt",  t1);
+            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/k_2.txt",   k);
+            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/rho_2.txt", rho);
+            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/tr_2.txt",  tr);
         end
         else if (SEC_LEVEL == 3) begin
             $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/s1_3.txt",  s1);
@@ -97,170 +98,181 @@ module tb_keygen;
             $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/rho_5.txt", rho);
             $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/tr_5.txt",  tr);
         end
-        
-        valid_i = 0;
-        ready_o = 0;
-        data_i  = 0;
-        ctr     = 0; 
-        c       = 0;
     end
 
+    initial begin
+        tb_rst = 1;
+        #(2*P);
+        tb_rst = 0;
+    end
 
     // TODO: revise this
     always_ff @(posedge clk) begin
-        rst     <= 0;
-        start   <= 0;
-        valid_i <= 0;
-        ready_o <= 0;
-        data_i  <= 0;
+        if (tb_rst) begin
+            valid_i <= 0;
+            ready_o <= 0;
+            data_i  <= 0;
+            ctr     <= 0; 
+            c       <= 0;
+            start   <= 0;
+            rst     <= 1;
+            state   <= S_INIT;
+        end
+
+        else begin
+            rst     <= 0;
+            start   <= 0;
+            valid_i <= 0;
+            ready_o <= 0;
+            data_i  <= 0;
         
-        unique case (state)
-            S_INIT: begin
-                start_time <= $time;
-                rst <= 1;
-                ctr <= ctr + 1;
-                // Arbitrary number of reset cycles
-                if (ctr == 3) begin
-                    ctr <= 0;
-                    state <= S_START;
-                end
-            end
-            S_START: begin
-                start <= 1;
-                state <= S_Z;
-            end
-            S_Z: begin
-                valid_i <= 1;
-                data_i <= seed[c][ctr*W +: W];
-               
-                if (ready_i) begin
+            unique case (state)
+                S_INIT: begin
+                    start_time <= $time;
+                    rst <= 1;
                     ctr <= ctr + 1;
-
-                    if (ctr == SEED_WORDS_NUM - 1) begin
+                    // Arbitrary number of reset cycles
+                    if (ctr == 3) begin
                         ctr <= 0;
-                        state <= S_RHO;
+                        state <= S_START;
                     end
-                end 
-            end
-            S_RHO: begin
-                ready_o <= 1;
-                if (valid_o) begin
-                    if (data_o !== rho[c][ctr*W+:W])
-                        $display("[Rho, %d] Error: Expected %h, received %h", ctr, rho[c][ctr*W+:W], data_o); 
+                end
+                S_START: begin
+                    start <= 1;
+                    state <= S_Z;
+                end
+                S_Z: begin
+                    valid_i <= 1;
+                    data_i <= seed[c][ctr*W +: W];
                 
-                    ctr <= ctr + 1;
-                    
-                    if (ctr == SEED_WORDS_NUM-1) begin
-                        ctr <= 0;
-                        state <= S_K;
-                    end
-                end
-            end        
-            S_K: begin
-                ready_o <= 1;
-                if (valid_o) begin
-                    if (data_o !== k[c][ctr*W+:W])
-                        $display("[K, %d] Error: Expected %h, received %h", ctr, k[c][ctr*W+:W], data_o); 
-                
-                    ctr <= ctr + 1;
-                    
-                    if (ctr == SEED_WORDS_NUM-1) begin
-                        ctr <= 0;
-                        state <= S_S1;
-                    end
-                end
-            end
-            S_S1: begin
-                ready_o <= 1;
-                if (valid_o) begin
-                    if (data_o !== s1[c][ctr*W+:W])
-                        $display("[S1, %d] Error: Expected %h, received %h", ctr, s1[c][ctr*W+:W], data_o); 
-    
-                    ctr <= ctr + 1;
-                    
-                    if (ctr == S1_WORDS_NUM-1) begin
-                        ctr <= 0;
-                        state <= S_S2;
-                    end
-                end
-            end
-            S_S2: begin
-                ready_o <= 1;
-                if (valid_o) begin
-                    if (data_o !== s2[c][ctr*W+:W])
-                        $display("[S2, %d] Error: Expected %h, received %h", ctr, s2[c][ctr*W+:W], data_o); 
-                
-                    ctr <= ctr + 1;
-                    
-                    if (ctr == S2_WORDS_NUM-1) begin
-                        ctr <= 0;
-                        state <= S_T1;
-                    end
-                end
-            end
-            S_T1: begin
-                ready_o <= 1;
-                if (valid_o) begin
-                    if (data_o !== t1[c][ctr*W+:W])
-                        $display("[T1, %d] Error: Expected %h, received %h", ctr, t1[c][ctr*W+:W], data_o); 
+                    if (ready_i) begin
+                        ctr <= ctr + 1;
 
-                    ctr <= ctr + 1;
+                        if (ctr == SEED_WORDS_NUM - 1) begin
+                            ctr <= 0;
+                            state <= S_RHO;
+                        end
+                    end 
+                end
+                S_RHO: begin
+                    ready_o <= 1;
+                    if (valid_o) begin
+                        if (data_o !== rho[c][ctr*W+:W])
+                            $display("[Rho, %d] Error: Expected %h, received %h", ctr, rho[c][ctr*W+:W], data_o); 
                     
-                    if (ctr == T1_WORDS_NUM-1) begin
-                        ctr <= 0;
-                        state <= S_T0;
+                        ctr <= ctr + 1;
+                        
+                        if (ctr == SEED_WORDS_NUM-1) begin
+                            ctr <= 0;
+                            state <= S_K;
+                        end
+                    end
+                end        
+                S_K: begin
+                    ready_o <= 1;
+                    if (valid_o) begin
+                        if (data_o !== k[c][ctr*W+:W])
+                            $display("[K, %d] Error: Expected %h, received %h", ctr, k[c][ctr*W+:W], data_o); 
+                    
+                        ctr <= ctr + 1;
+                        
+                        if (ctr == SEED_WORDS_NUM-1) begin
+                            ctr <= 0;
+                            state <= S_S1;
+                        end
                     end
                 end
-            end
-            S_T0: begin
-                ready_o <= 1;
-                if (valid_o) begin
-                    if (data_o !== t0[c][ctr*W+:W])
-                        $display("[T0, %d] Error: Expected %h, received %h", ctr, t0[c][ctr*W+:W], data_o); 
-                    ctr <= ctr + 1;
-                    
-                    if (ctr == T0_WORDS_NUM-1) begin
-                        ctr <= 0;
-                        state <= S_TR;
+                S_S1: begin
+                    ready_o <= 1;
+                    if (valid_o) begin
+                        if (data_o !== s1[c][ctr*W+:W])
+                            $display("[S1, %d] Error: Expected %h, received %h", ctr, s1[c][ctr*W+:W], data_o); 
+        
+                        ctr <= ctr + 1;
+                        
+                        if (ctr == S1_WORDS_NUM-1) begin
+                            ctr <= 0;
+                            state <= S_S2;
+                        end
                     end
                 end
-            end
-            S_TR: begin
-                ready_o <= 1;
-                if (valid_o) begin
-                    if (data_o !== tr[c][ctr*W+:W])
-                        $display("[TR, %d] Error: Expected %h, received %h", ctr, tr[c][ctr*W+:W], data_o); 
-                
-                    ctr <= ctr + 1;
+                S_S2: begin
+                    ready_o <= 1;
+                    if (valid_o) begin
+                        if (data_o !== s2[c][ctr*W+:W])
+                            $display("[S2, %d] Error: Expected %h, received %h", ctr, s2[c][ctr*W+:W], data_o); 
                     
-                    if (ctr == SEED_WORDS_NUM-1) begin
-                        ctr <= 0;
-                        state <= S_STOP;
+                        ctr <= ctr + 1;
+                        
+                        if (ctr == S2_WORDS_NUM-1) begin
+                            ctr <= 0;
+                            state <= S_T1;
+                        end
                     end
                 end
-            end
-            S_STOP: begin
-                ready_o <= 1;
-                c       <= c + 1;
-                state   <= S_INIT;
+                S_T1: begin
+                    ready_o <= 1;
+                    if (valid_o) begin
+                        if (data_o !== t1[c][ctr*W+:W])
+                            $display("[T1, %d] Error: Expected %h, received %h", ctr, t1[c][ctr*W+:W], data_o); 
 
-                $display("KG[%d] completed in %d clock cycles", c, ($time-start_time)/P);
-
-                if (c == NUM_TV-1) begin
-                    c <= 0;
-                    $display ("Testbench done!");
-                    $finish;
+                        ctr <= ctr + 1;
+                        
+                        if (ctr == T1_WORDS_NUM-1) begin
+                            ctr <= 0;
+                            state <= S_T0;
+                        end
+                    end
                 end
-            end
-            default: begin
-                $fatal("Invalid state reached: %0d", state);
-            end
-        endcase
+                S_T0: begin
+                    ready_o <= 1;
+                    if (valid_o) begin
+                        if (data_o !== t0[c][ctr*W+:W])
+                            $display("[T0, %d] Error: Expected %h, received %h", ctr, t0[c][ctr*W+:W], data_o); 
+                        ctr <= ctr + 1;
+                        
+                        if (ctr == T0_WORDS_NUM-1) begin
+                            ctr <= 0;
+                            state <= S_TR;
+                        end
+                    end
+                end
+                S_TR: begin
+                    ready_o <= 1;
+                    if (valid_o) begin
+                        if (data_o !== tr[c][ctr*W+:W])
+                            $display("[TR, %d] Error: Expected %h, received %h", ctr, tr[c][ctr*W+:W], data_o); 
+                    
+                        ctr <= ctr + 1;
+                        
+                        if (ctr == SEED_WORDS_NUM-1) begin
+                            ctr <= 0;
+                            state <= S_STOP;
+                        end
+                    end
+                end
+                S_STOP: begin
+                    ready_o <= 1;
+                    c       <= c + 1;
+                    state   <= S_INIT;
+
+                    $display("KG[%d] completed in %d clock cycles", c, ($time-start_time)/P);
+
+                    if (c == NUM_TV-1) begin
+                        c <= 0;
+                        $display ("Testbench done!");
+                        $finish;
+                    end
+                end
+                default: begin
+                    $fatal(1, "Invalid state reached: %0d", state);
+                end
+            endcase
+        end
     end
       
   
-    always #(`P/2) clk = ~clk;
+    always #(P/2) clk = ~clk;
   
 
 endmodule
-`undef P

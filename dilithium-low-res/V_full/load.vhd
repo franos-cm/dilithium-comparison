@@ -14,18 +14,18 @@ use IEEE.NUMERIC_STD.ALL;
 
 library work;
 use work.dilithium_v.all;
-use work.interfaces.all;
+use work.interfaces_v.all;
 use work.memmap_v.all;
 
-entity load is
+entity load_v is
     Port (
         clk : in std_logic;
         d   : in load_in_type;
         q   : out load_out_type
     );
-end load;
+end load_v;
 
-architecture Behavioral of load is
+architecture Behavioral of load_v is
 
 type state_type is (idle, l_rho, l_K, l_tr, l_chash, l_t1, l_t1_send, l_s1, l_s1_send, l_s2, l_s2_send, l_t0, l_t0_send, l_z, l_z_send, l_h, l_h_poly, l_h_send);
 signal state, nextstate : state_type;
@@ -133,7 +133,7 @@ generate
                 "000" when "00000000000000000000010",
                 "000" when others; -- invalid
     end generate;
-    eta_load_counter: entity work.counter
+    eta_load_counter: entity work.counter_v
     generic map (max_value => 96/32-1)
     port map (
         clk => clk,
@@ -141,7 +141,7 @@ generate
         q => elcntq,
         value => open
     );
-    eta_store_counter: entity work.counter
+    eta_store_counter: entity work.counter_v
     generic map (max_value => ESCNT_MAX)
     port map (
         clk => clk,
@@ -184,7 +184,7 @@ generate
                 "0000" when "00000000000000000000100",
                 "0000" when others; -- invalid
     end generate;
-    eta_store_counter: entity work.counter
+    eta_store_counter: entity work.counter_v
     generic map (max_value => ESCNT_MAX)
     port map (
         clk => clk,
@@ -321,9 +321,9 @@ begin
 end process;
 
 ----------------------------------------------------------------------------------------------------
--- counter
+-- counter_v
 ----------------------------------------------------------------------------------------------------
-reg_counter: entity work.counter
+reg_counter: entity work.counter_v
 generic map (max_value => DILITHIUM_omega+DILITHIUM_k-1)
 port map (
     clk => clk,
@@ -332,7 +332,7 @@ port map (
     value => regcnt
 );
 
-memory_counter: entity work.counter
+memory_counter: entity work.counter_v
 generic map (max_value => DILITHIUM_k*DILITHIUM_N/4-1)
 port map (
     clk => clk,
@@ -341,7 +341,7 @@ port map (
     value => memcnt
 );
 
-t1r_load_counter: entity work.counter
+t1r_load_counter: entity work.counter_v
 generic map (max_value => 160/32-1)
 port map (
     clk => clk,
@@ -350,7 +350,7 @@ port map (
     value => open
 );
 
-t1r_mem_counter: entity work.counter
+t1r_mem_counter: entity work.counter_v
 generic map (max_value => 160/40+GLOBAL_MEMORY_DELAY-1)
 port map (
     clk => clk,
@@ -359,7 +359,7 @@ port map (
     value => t1rmcnt
 );
 
-t0r_load_counter: entity work.counter
+t0r_load_counter: entity work.counter_v
 generic map (max_value => 416/32-1)
 port map (
     clk => clk,
@@ -368,7 +368,7 @@ port map (
     value => open
 );
 
-t0r_mem_counter: entity work.counter
+t0r_mem_counter: entity work.counter_v
 generic map (max_value => 416/52+GLOBAL_MEMORY_DELAY+DELAY_CONV_YZ-1)
 port map (
     clk => clk,
@@ -377,7 +377,7 @@ port map (
     value => t0rmcnt
 );
 
-z_load_counter: entity work.counter
+z_load_counter: entity work.counter_v
 generic map (max_value => ZREG_WIDTH/32-1)
 port map (
     clk => clk,
@@ -386,7 +386,7 @@ port map (
     value => open
 );
 
-z_mem_counter: entity work.counter
+z_mem_counter: entity work.counter_v
 generic map (max_value => ZREG_WIDTH/((DILITHIUM_loggamma1+1)*4)+GLOBAL_MEMORY_DELAY+DELAY_CONV_YZ-1)
 port map (
     clk => clk,

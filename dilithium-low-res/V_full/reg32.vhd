@@ -16,9 +16,9 @@ use UNISIM.VComponents.all;
 
 library work;
 use work.dilithium_v.all;
-use work.interfaces.all;
+use work.interfaces_v.all;
 
-entity reg32 is
+entity reg32_v is
     Generic (
         width : natural := 256
     );
@@ -27,9 +27,9 @@ entity reg32 is
         d   : in reg32_in_type;
         q   : out reg32_out_type
     );
-end reg32;
+end reg32_v;
 
-architecture Behavioral of reg32 is
+architecture Behavioral of reg32_v is
 
     signal data : std_logic_vector(width-1 downto 0);
     

@@ -15,15 +15,15 @@ use IEEE.NUMERIC_STD.ALL;
 library work;
 use work.dilithium_v.all;
 
-entity highbits is
+entity highbits_v is
     Port(
         clk : in std_logic;
         d   : in std_logic_vector(22 downto 0);
         q   : out std_logic_vector(22 downto 0)
     );
-end highbits;
+end highbits_v;
 
-architecture Behavioral of highbits is
+architecture Behavioral of highbits_v is
 
     signal qtmp : std_logic_vector(5 downto 0);
 

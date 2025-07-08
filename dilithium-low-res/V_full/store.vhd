@@ -14,18 +14,18 @@ use IEEE.NUMERIC_STD.ALL;
 
 library work;
 use work.dilithium_v.all;
-use work.interfaces.all;
+use work.interfaces_v.all;
 use work.memmap_v.all;
 
-entity store is
+entity store_v is
     Port (
         clk : in std_logic;
         d   : in store_in_type;
         q   : out store_out_type
     );
-end store;
+end store_v;
 
-architecture Behavioral of store is
+architecture Behavioral of store_v is
 
     type state_type is (idle, s_seed, s_rho, s_t1, s_k, s_tr,
     s_s1_loadreg, s_s1_store, 
@@ -61,9 +61,9 @@ architecture Behavioral of store is
 
 begin
 --------------------------------------------------------------------------------------------------
--- memory counter
+-- memory counter_v
 --------------------------------------------------------------------------------------------------
-memory_counter: entity work.counter
+memory_counter: entity work.counter_v
 generic map (max_value => DILITHIUM_N*DILITHIUM_k/4-1)
 port map (
     clk => clk,
@@ -73,9 +73,9 @@ port map (
 );
 
 --------------------------------------------------------------------------------------------------
--- storing h: omega counter and h buffer
+-- storing h: omega counter_v and h buffer
 --------------------------------------------------------------------------------------------------
-omega_counter: entity work.counter
+omega_counter: entity work.counter_v
 generic map (max_value => DILITHIUM_omega+DILITHIUM_k-1)
 port map (
     clk => clk,
@@ -132,7 +132,7 @@ generate
                     )) mod DILITHIUM_Q
                 ), 23));
     end generate;
-    eta_load_counter: entity work.counter
+    eta_load_counter: entity work.counter_v
     generic map (max_value => 96/32-1)
     port map (
         clk => clk,
@@ -140,7 +140,7 @@ generate
         q => elcntq,
         value => open
     );
-    eta_store_counter: entity work.counter
+    eta_store_counter: entity work.counter_v
     generic map (max_value => 96/12-1)
     port map (
         clk => clk,
@@ -183,7 +183,7 @@ generate
                     )) mod DILITHIUM_Q
                 ), 23));
     end generate;
-    eta_store_counter: entity work.counter
+    eta_store_counter: entity work.counter_v
     generic map (max_value => 32/16-1)
     port map (
         clk => clk,
@@ -194,9 +194,9 @@ generate
 end generate;
 
 --------------------------------------------------------------------------------------------------
--- register counter
+-- register counter_v
 --------------------------------------------------------------------------------------------------
-reg_counter: entity work.counter
+reg_counter: entity work.counter_v
 generic map (max_value => 256/32-1)
 port map (
     clk => clk,
@@ -443,7 +443,7 @@ begin
             end if;
         
         -----------------------------------------------------------------------------
-        -- store keygen seed
+        -- store keygen_v seed
         -----------------------------------------------------------------------------
         when s_seed => 
             q.ready_rcv <= '1';

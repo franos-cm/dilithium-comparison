@@ -14,18 +14,18 @@ use IEEE.NUMERIC_STD.ALL;
 
 library work;
 use work.dilithium_iii.all;
-use work.interfaces.all;
+use work.interfaces_iii.all;
 use work.memmap_iii.all;
 
-entity keygen is
+entity keygen_iii is
     Port (
         clk : in std_logic;
         d   : in keygen_in_type;
         q   : out keygen_out_type
     );
-end keygen;
+end keygen_iii;
 
-architecture Behavioral of keygen is
+architecture Behavioral of keygen_iii is
 
     constant MEMORY_DELAY : natural := GLOBAL_MEMORY_DELAY;
 
@@ -69,7 +69,7 @@ architecture Behavioral of keygen is
     signal rhoprimemux : rhoprimemux_type;
     signal rhoprimeregd_init : reg32_in_type;
     
-    -- keccak mux
+    -- keccak_iii mux
     type keccakmux_type is (keccakmux_init, keccakmux_expandA, keccakmux_expands1s2, keccakmux_crhrhot1);
     signal keccakmux : keccakmux_type;
     signal keccakd_init : keccak_in_type;
@@ -113,7 +113,7 @@ select
                     d.crtq.rhoregd when rhomux_crhrhot1;
 
 ------------------------------------------------------------------------------------
--- keccak input handling
+-- keccak_iii input handling
 ------------------------------------------------------------------------------------
 with keccakmux
 select
@@ -289,7 +289,7 @@ q.crtd.memq <= d.memq;
 q.trregd <= d.crtq.trregd;
 
 ------------------------------------------------------------------------------------
--- intt k counter
+-- intt k counter_iii
 ------------------------------------------------------------------------------------
 cntr: process(clk)
 begin
@@ -318,7 +318,7 @@ end process;
 ------------------------------------------------------------------------------------
 -- seed expansion ctrl
 ------------------------------------------------------------------------------------
-seedexp_counter: entity work.counter
+seedexp_counter: entity work.counter_iii
 generic map (max_value => SHAKE128_RATE/32 + 24 + 256/32 + 512/32 + 256/32 + 1)
 port map (
     clk => clk,

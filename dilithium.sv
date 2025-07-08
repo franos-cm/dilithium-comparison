@@ -17,8 +17,15 @@ module dilithium #(
     input  logic         ready_o,
     output logic [W-1:0] data_o
 );
+    // NOTE: for some reason casting doesnt work, so this is necessary
+    // localparam logic [2:0] sec_lvl_sig = 3'(SEC_LEVEL);
+    localparam logic [2:0] sec_lvl_sig = (SEC_LEVEL == 2) ? 3'b010 :
+                                         (SEC_LEVEL == 3) ? 3'b011 :
+                                         (SEC_LEVEL == 5) ? 3'b101 : 3'b000;
+
     logic start_strobe;
     logic done_strobe;
+
 
     edge_detector start_detector (
         .clk  (clk),
@@ -42,7 +49,7 @@ module dilithium #(
                 .rst(rst),
                 .start(start_strobe),
                 .mode(mode),
-                .sec_lvl(3'SEC_LEVEL),
+                .sec_lvl(sec_lvl_sig),
                 .valid_i(valid_i),
                 .ready_i(ready_i),
                 .data_i(data_i),
@@ -53,8 +60,8 @@ module dilithium #(
             );
         end
         else begin
-            dilithium_low_res (
-                .SEC_LEVEL = SEC_LEVEL
+            dilithium_low_res #(
+                .SEC_LEVEL(SEC_LEVEL)
             )
             low_res_instance (
                 .clk(clk),

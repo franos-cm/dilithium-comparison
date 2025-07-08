@@ -18,7 +18,7 @@
 -- LAST CHANGES:            13/12/2018
 -- MODULE NAME:			    KECCAK_RC
 --
--- REVISION:				1.00 - Contains a LUT for the KECCAK round constants
+-- REVISION:				1.00 - Contains a LUT for the keccak_v round constants
 --
 -- LICENCE: 				Please look at licence.txt
 -- USAGE INFORMATION:	    Please look at readme.txt. If licence.txt or readme.txt

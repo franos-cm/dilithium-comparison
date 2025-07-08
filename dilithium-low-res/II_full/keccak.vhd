@@ -16,9 +16,9 @@
 --
 -- CREATE DATE:			    13/12/2018
 -- LAST CHANGES:            10/01/2020
--- MODULE NAME:			    KECCAK
+-- MODULE NAME:			    keccak_ii
 --
--- REVISION:				1.00 - KECCAK top level
+-- REVISION:				1.00 - keccak_ii top level
 --
 -- LICENCE: 				Please look at licence.txt
 -- USAGE INFORMATION:	    Please look at readme.txt. If licence.txt or readme.txt
@@ -40,17 +40,17 @@ LIBRARY IEEE;
 LIBRARY work;
     USE work.keccak_settings.ALL;
     USE work.dilithium_ii.ALL;
-    use work.interfaces.ALL;
+    use work.interfaces_ii.ALL;
     
 
-ENTITY KECCAK IS
+ENTITY keccak_ii IS
     PORT ( CLK          : IN  STD_LOGIC;
            d            : IN  KECCAK_IN_TYPE;
            q            : OUT KECCAK_OUT_TYPE
            );
-END KECCAK;
+END keccak_ii;
 
-ARCHITECTURE Structural OF KECCAK IS
+ARCHITECTURE Structural OF keccak_ii IS
 
 
 
@@ -111,15 +111,15 @@ BEGIN
         END GENERATE;
     END GENERATE a001;
                     
-    -- KECCAK round function
-    KECCAK_ROUND : ENTITY work.keccak_round
+    -- keccak_ii round function
+    keccak_round_low_res : ENTITY work.keccak_round_low_res
         PORT MAP (
             STATE_IN     => STATE_REG,
             STATE_OUT    => STATE_OUT,
             ROUND_NUMBER => CNT_ROUND
         );
     
-    -- Round Counter
+    -- Round counter
     COUNTER_ROUND : ENTITY work.KECCAK_COUNTER
     GENERIC MAP (
         SIZE            => CNT_LENGTH_ROUND,
@@ -143,7 +143,7 @@ BEGIN
         CNT_OUT         => CNT_ROTATE
     );
     
-    -- KECCAK Finite State Machine
+    -- keccak_ii Finite State Machine
     FSM : ENTITY work.KECCAK_CONTROLLER
     PORT MAP (
         CLK             => CLK,

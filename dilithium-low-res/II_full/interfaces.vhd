@@ -15,10 +15,10 @@ library work;
 use work.dilithium_ii.all;
 use work.memmap_ii.all;
 
-package interfaces is
+package interfaces_ii is
 
 ------------------------
--- mem_8_quarter_poly --
+-- mem_8_quarter_poly_ii --
 ------------------------
     type mem_8_quarter_poly_in_type is record
         ren : std_logic;
@@ -29,7 +29,7 @@ package interfaces is
     end record mem_8_quarter_poly_in_type;
     
 ----------------
--- mem_8_poly --
+-- mem_8_poly_ii --
 ----------------
     type mem_8_poly_in_type is record
         rsel  : natural range 0 to 7;
@@ -55,7 +55,7 @@ package interfaces is
 
 
 -----------
--- reg32 --
+-- reg32_ii --
 -----------
     type reg32_in_type is record
         en_rotate, en_write : std_logic;
@@ -84,7 +84,7 @@ package interfaces is
     end record fifo_out_type;
     
 ----------
--- hreg --
+-- hreg_ii --
 ----------
     type hreg_in_type is record
         rst : std_logic;
@@ -101,7 +101,7 @@ package interfaces is
     end record hreg_out_type;
     
 ----------------
--- convert_yz --
+-- convert_yz_ii --
 ----------------
     constant DELAY_CONV_YZ : natural := 3;
     type convert_yz_in_type is record
@@ -112,7 +112,7 @@ package interfaces is
     constant ZEROCONVYZ : convert_yz_in_type := (en => '0', sub => (others => '0'), data => (others => (others => '0')));
     
 -------------
--- counter --
+-- counter_ii --
 -------------
     type counter_in_type is record
         en, rst : std_logic;
@@ -123,7 +123,7 @@ package interfaces is
     end record counter_out_type;
 
 ------------
--- keccak --
+-- keccak_ii --
 ------------
     type keccak_in_type is record
         en : std_logic;
@@ -157,7 +157,7 @@ package interfaces is
     end record expand_out_type;
 
 --------------
--- expand_y --
+-- expand_y_ii --
 --------------
     type expand_y_in_type is record
         en     : std_logic;
@@ -180,7 +180,7 @@ package interfaces is
     end record expand_y_out_type;
 
 --------------
--- highbits --
+-- highbits_ii --
 --------------
     type highbits_in_type is array(0 to 3) of std_logic_vector(22 downto 0);
     type highbits_out_type is record
@@ -215,7 +215,7 @@ package interfaces is
     end record use_hint_out_type;
 
 ---------------
--- macc_poly --
+-- macc_poly_ii --
 ---------------
     type macc_poly_op_type is (op_macc, op_add, op_sub);
 
@@ -234,7 +234,7 @@ package interfaces is
     end record macc_poly_out_type;
 
 ----------------
--- macc_coeff --
+-- macc_coeff_ii --
 ----------------
     type macc_coeff_in_type is record
         en : std_logic;
@@ -247,7 +247,7 @@ package interfaces is
     type macc_coeff_out_type is array(0 to 3) of std_logic_vector(22 downto 0);
 
 --------------
--- macc_dsp --
+-- macc_dsp_ii --
 --------------
     type macc_dsp_in_type is record
         en : std_logic;
@@ -258,7 +258,7 @@ package interfaces is
     end record macc_dsp_in_type;
 
 -----------------
--- mem_twiddle --
+-- mem_twiddle_ii --
 -----------------
     type mem_twiddle_addr_array is array(natural range <>) of std_logic_vector(8 downto 0);
     
@@ -466,7 +466,7 @@ package interfaces is
     end record bfu_subtracter_out_type;
 
 ----------------
--- crh_rho_t1 --
+-- crh_rho_t1_ii --
 ----------------
     type crh_rho_t1_in_type is record
         en : std_logic;
@@ -484,14 +484,14 @@ package interfaces is
     end record crh_rho_t1_out_type;
 
 ------------
--- matmul --
+-- matmul_ii --
 ------------
     type matmul_in_type is record
         en : std_logic;
         vecaddr : matvecaddr_type;
         resvecaddr : matvecaddr_type;
         
-        -- interfaces
+        -- interfaces_ii
         memq : memory_out_type;
         nttq : ntt_out_type;
         maccq : macc_poly_out_type;
@@ -500,14 +500,14 @@ package interfaces is
     type matmul_out_type is record
         ready : std_logic;
         
-        -- interfaces
+        -- interfaces_ii
         memd : memory_in_type;
         nttd : ntt_in_type;
         maccd : macc_poly_in_type;
     end record matmul_out_type;
 
 -------------
--- check_z --
+-- check_z_ii --
 -------------
     type check_z_in_type is record
         en,rst : std_logic;
@@ -521,7 +521,7 @@ package interfaces is
     end record check_z_out_type;
 
 ----------------
--- ballsample --
+-- ballsample_ii --
 ----------------
     type ballsample_in_type is record
         en, rst : std_logic;
@@ -544,7 +544,7 @@ package interfaces is
 
 
 ------------
--- keygen --
+-- keygen_ii --
 ------------
     type keygen_in_type is record
         -- ctrl input
@@ -553,7 +553,7 @@ package interfaces is
         -- data input
         seedregq : reg32_out_type;
         
-        -- interfaces
+        -- interfaces_ii
         keccakq : keccak_out_type;
         memq : memory_out_type;
         maccq : macc_poly_out_type;
@@ -573,7 +573,7 @@ package interfaces is
         -- data in ctrl
         seedregd : reg32_in_type;
         
-        -- interfaces
+        -- interfaces_ii
         keccakd : keccak_in_type;
         memd : memory_in_type;
         maccd : macc_poly_in_type;
@@ -587,13 +587,13 @@ package interfaces is
     end record keygen_out_type;
     
 ------------------
--- sign_precomp --
+-- sign_precomp_ii --
 ------------------
     type sign_precomp_in_type is record
         -- ctrl input
         en : std_logic;
         
-        -- interfaces
+        -- interfaces_ii
         keccakq : keccak_out_type;
         memq : memory_out_type;
         nttq : ntt_out_type;
@@ -605,7 +605,7 @@ package interfaces is
         -- ctrl output
         ready : std_logic;
         
-        -- interfaces
+        -- interfaces_ii
         keccakd : keccak_in_type;
         memd : memory_in_type;
         nttd : ntt_in_type;
@@ -620,7 +620,7 @@ package interfaces is
         -- ctrl input
         en : std_logic;
         
-        -- interfaces
+        -- interfaces_ii
         convyzq : payload_array(0 to 3);
         usehintq : use_hint_out_type;
         keccakq : keccak_out_type;
@@ -645,7 +645,7 @@ package interfaces is
         -- ctrl output
         ready : std_logic;
         
-        -- interfaces
+        -- interfaces_ii
         convyzd : convert_yz_in_type;
         usehintd : use_hint_in_type;
         keccakd : keccak_in_type;
@@ -673,7 +673,7 @@ package interfaces is
         -- ctrl input
         en : std_logic;
         
-        -- interfaces
+        -- interfaces_ii
         keccakq : keccak_out_type;
         memq : memory_out_type;
         nttq : ntt_out_type;
@@ -686,7 +686,7 @@ package interfaces is
         -- ctrl output
         ready : std_logic;
         
-        -- interfaces
+        -- interfaces_ii
         keccakd : keccak_in_type;
         memd : memory_in_type;
         nttd : ntt_in_type;
@@ -704,7 +704,7 @@ package interfaces is
         en : std_logic;
         rst : std_logic;
         
-        -- interfaces
+        -- interfaces_ii
         usehintq : use_hint_out_type;
         ballsampleq : ballsample_out_type;
         chkzq : check_z_out_type;
@@ -726,7 +726,7 @@ package interfaces is
         -- data out
         result : std_logic;
         
-        -- interfaces
+        -- interfaces_ii
         usehintd : use_hint_in_type;
         ballsampled : ballsample_in_type;
         chkzd : check_z_in_type;
@@ -741,7 +741,7 @@ package interfaces is
     end record verify_out_type;
     
 ----------------
--- digest_msg --
+-- digest_msg_ii --
 ----------------
     type digest_msg_in_type is record
         -- ctrl input
@@ -751,7 +751,7 @@ package interfaces is
         
         payload : std_logic_vector(31 downto 0);
         
-        -- interfaces
+        -- interfaces_ii
         keccakq : keccak_out_type;
         trregq : reg32_out_type;
     end record digest_msg_in_type;
@@ -761,7 +761,7 @@ package interfaces is
         ready : std_logic;
         ready_rcv : std_logic;
         
-        -- interfaces
+        -- interfaces_ii
         keccakd : keccak_in_type;
         trregd : reg32_in_type;
         muregd : reg32_in_type;
@@ -803,7 +803,7 @@ package interfaces is
     type store_in_type is record
         en, rst : std_logic;
         valid : std_logic;
-        payload_type : std_logic_vector(1 downto 0); -- pk/sk/signature/keygen seed
+        payload_type : std_logic_vector(1 downto 0); -- pk/sk/signature/keygen_ii seed
         payload : std_logic_vector(31 downto 0);
         
         convyzq : payload_array(0 to 3);
@@ -835,4 +835,4 @@ package interfaces is
         fifot0datad : std_logic_vector(31 downto 0);
     end record store_out_type;
 
-end interfaces;
+end interfaces_ii;

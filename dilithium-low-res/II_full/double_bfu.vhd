@@ -13,17 +13,17 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 library work;
 use work.dilithium_ii.all;
-use work.interfaces.all;
+use work.interfaces_ii.all;
 
-entity double_bfu is
+entity double_bfu_ii is
     Port (
         clk : in std_logic;
         d   : in double_bfu_in_type;
         q   : out double_bfu_out_type
     );
-end double_bfu;
+end double_bfu_ii;
 
-architecture Behavioral of double_bfu is
+architecture Behavioral of double_bfu_ii is
 
     signal bfu1d, bfu2d : butterfly_in_type;
     signal bfu1q, bfu2q : butterfly_out_type;
@@ -33,21 +33,21 @@ architecture Behavioral of double_bfu is
     
 begin
 
-bfu1: entity work.butterfly_dsp
+bfu1: entity work.butterfly_dsp_ii
 port map(
     clk => clk,
     d => bfu1d,
     q => bfu1q
 );
 
-bfu2: entity work.butterfly_dsp
+bfu2: entity work.butterfly_dsp_ii
 port map(
     clk => clk,
     d => bfu2d,
     q => bfu2q
 );
 
-subtracter: entity work.bfu_subtracter
+subtracter: entity work.bfu_subtracter_ii
 port map (
     clk => clk,
     d => bfsd,

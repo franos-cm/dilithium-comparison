@@ -13,18 +13,18 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 library work;
 use work.dilithium_v.all;
-use work.interfaces.all;
+use work.interfaces_v.all;
 use work.memmap_v.all;
 
-entity verify_precomp is
+entity verify_precomp_v is
     Port (
         clk : in std_logic;
         d   : in verify_precomp_in_type;
         q   : out verify_precomp_out_type
     );
-end verify_precomp;
+end verify_precomp_v;
 
-architecture Behavioral of verify_precomp is
+architecture Behavioral of verify_precomp_v is
     
     type state_type is (idle, crt1, crt1_finish, expandA, expandA_finish, nttt1, nttt1_finish, nttt1_shortcut);
     signal state, nextstate : state_type;
@@ -39,7 +39,7 @@ architecture Behavioral of verify_precomp is
     
 begin
 
-kcounter: entity work.counter
+kcounter: entity work.counter_v
 generic map (max_value => DILITHIUM_k-1)
 port map (
     clk => clk,

@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 module dilithium_low_res #(
-    parameter SEC_LEVEL = 2
+    parameter integer SEC_LEVEL = 2
 )(
     input  logic         clk,
     input  logic         rst,
@@ -13,7 +13,7 @@ module dilithium_low_res #(
     output logic         valid_o,
     input  logic         ready_o,
     output logic [31:0]  data_o,
-    output logic         done,
+    output logic         done
 );
 
     logic [3:0]   op_in;
@@ -27,12 +27,12 @@ module dilithium_low_res #(
     logic         valid_out;
 
     assign data_in = data_i;
-    assign data_out = data_o;
+    assign data_o = data_out;
     assign valid_in = valid_i;
-    assign valid_out = valid_o;
+    assign valid_o = valid_out;
     // Name schemes are different
     assign ready_rcv_in = ready_o;
-    assign ready_rcv_out = ready_in;
+    assign ready_i = ready_rcv_out;
 
     adapter_low_res adapter (
         .clk     (clk),

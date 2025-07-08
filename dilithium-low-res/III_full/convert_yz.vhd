@@ -13,24 +13,24 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 library work;
 use work.dilithium_iii.all;
-use work.interfaces.all;
+use work.interfaces_iii.all;
 
-entity convert_yz is
+entity convert_yz_iii is
     Port (
         clk : in std_logic;
         d : in convert_yz_in_type;
         q : out payload_array(0 to 3)
     );
-end convert_yz;
+end convert_yz_iii;
 
-architecture Behavioral of convert_yz is
+architecture Behavioral of convert_yz_iii is
 
 begin
 
 -- sample conversion
 sampleconvgen: for i in 0 to 1
 generate
-    sampleconv: entity work.sample_y_dsp
+    sampleconv: entity work.sample_y_dsp_iii
     port map (
         clk => clk,
         en => d.en,

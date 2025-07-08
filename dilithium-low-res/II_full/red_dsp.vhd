@@ -13,7 +13,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 library work;
 use work.dilithium_ii.all;
-use work.interfaces.all;
+use work.interfaces_ii.all;
 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
@@ -25,15 +25,15 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 --library UNISIM;
 --use UNISIM.VComponents.all;
 
-entity red_dsp is
+entity red_dsp_ii is
     Port (
         clk : in std_logic;
         d : in red_dsp_in_type;
         q : out red_dsp_out_type
     );
-end red_dsp;
+end red_dsp_ii;
 
-architecture Behavioral of red_dsp is
+architecture Behavioral of red_dsp_ii is
 
 constant RED_STAGE_1_DELAY : integer := 4;
 constant RED_STAGE_2_DELAY : integer := 3;
@@ -59,14 +59,15 @@ signal e1 : std_logic_vector(9 downto 0);
 signal e2 : std_logic_vector(1 downto 0);
 signal stage_3_delayed : std_logic_vector(23 downto 0);
 
+signal q_internal : red_dsp_out_type;
+
 begin
 
 
-
-
+q <= q_internal;
 
 -- STAGE 1 --
-stage1: entity work.red_dsp_1
+stage1: entity work.red_dsp_1_ii
 port map (
     clk => clk,
     d => d1,
@@ -93,7 +94,7 @@ d1.a(23 downto 11) <= d.data(45 downto 33);
 d1.c(33 downto 11) <= d.data(45 downto 23);
 
 -- delay lowest bit
-delay_lsb: entity work.dyn_shift_reg
+delay_lsb: entity work.dyn_shift_reg_ii
 generic map (width => 1, max_depth => RED_STAGE_1_DELAY)
 port map (
     clk => clk,
@@ -104,7 +105,7 @@ port map (
 );
 
 -- delay lower part of coefficient
-delay_low: entity work.dyn_shift_reg
+delay_low: entity work.dyn_shift_reg_ii
 generic map (width => 23, max_depth => RED_STAGE_1_DELAY)
 port map (
     clk => clk,
@@ -121,7 +122,7 @@ port map (
 
 
 -- STAGE 2 --
-stage2: entity work.red_dsp_2
+stage2: entity work.red_dsp_2_ii
 port map (
     clk => clk,
     d => d2,
@@ -154,7 +155,7 @@ end process;
 
 
 -- STAGE 3 --
-stage3: entity work.red_dsp_3
+stage3: entity work.red_dsp_3_ii
 port map (
     clk => clk,
     d => d3,
@@ -166,7 +167,7 @@ d3.pcin <= q2.pcout;
 d3.en <= d.en;
 
 
-delay_stage_3: entity work.dyn_shift_reg
+delay_stage_3: entity work.dyn_shift_reg_ii
 generic map (width => 24, max_depth => RED_STAGE_4_DELAY)
 port map (
     clk => clk,
@@ -182,7 +183,7 @@ port map (
 
 
 -- STAGE 4 --    
-stage4: entity work.red_dsp_4
+stage4: entity work.red_dsp_4_ii
 port map (
     clk  => clk,
     d => d4,
@@ -193,7 +194,7 @@ d4.pcin <= q3.pcout;
 d4.c <= std_logic_vector(to_signed(DILITHIUM_Q, 24)) when q3.p(47) = '1' else 
         std_logic_vector(to_signed(-DILITHIUM_Q, 24));
 
-q.data <= stage_3_delayed(22 downto 0) when q4.p(47) = '1' else
+q_internal.data <= stage_3_delayed(22 downto 0) when q4.p(47) = '1' else
           q4.p(22 downto 0);
         
 
@@ -201,7 +202,7 @@ assertproc: process(clk)
 begin
     if rising_edge(clk)
     then
-        assert to_integer(unsigned(q.data)) < DILITHIUM_Q report "reduction failed: "&integer'image(to_integer(unsigned(q.data))) severity warning;
+        assert to_integer(unsigned(q_internal.data)) < DILITHIUM_Q report "reduction failed: "&integer'image(to_integer(unsigned(q_internal.data))) severity warning;
     end if;
 end process;
 

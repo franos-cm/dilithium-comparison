@@ -17,17 +17,17 @@ use UNISIM.vcomponents.all;
 
 library work;
 use work.dilithium_ii.all;
-use work.interfaces.all;
+use work.interfaces_ii.all;
 
-entity bfu_stage_1 is
+entity bfu_stage_1_ii is
     port (
         clk : in std_logic;
         d   : in bfu_stage_1_in_type;
         q   : out bfu_stage_1_out_type
     );
-end bfu_stage_1;
+end bfu_stage_1_ii;
 
-architecture Behavioral of bfu_stage_1 is
+architecture Behavioral of bfu_stage_1_ii is
     signal ALUMODE : std_logic_vector(3 downto 0);
     signal INMODE : std_logic_vector(4 downto 0);
     signal OPMODE : std_logic_vector(6 downto 0);
@@ -53,7 +53,7 @@ begin
     q.p <= P(16 downto 0);
     
     -- delay input C
-    delay_c: entity work.dyn_shift_reg
+    delay_c: entity work.dyn_shift_reg_ii
     generic map (width => 23, max_depth => 2)
     port map (
         clk => clk,
@@ -64,7 +64,7 @@ begin
     );
     
     -- delay input sel -- no need to pipeline this, we do not change this frequently 
---    delay_sel: entity work.dyn_shift_reg
+--    delay_sel: entity work.dyn_shift_reg_ii
 --    generic map (width => 1, max_depth => 2)
 --    port map (
 --        clk => clk,

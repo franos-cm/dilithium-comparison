@@ -14,17 +14,17 @@ use IEEE.NUMERIC_STD.ALL;
 
 library work;
 use work.dilithium_iii.all;
-use work.interfaces.all;
+use work.interfaces_iii.all;
 
-entity ntt is
+entity ntt_iii is
     Port (
         clk :  in std_logic;
         d   :  in ntt_in_type;
         q   : out ntt_out_type
     );
-end ntt;
+end ntt_iii;
 
-architecture Behavioral of ntt is
+architecture Behavioral of ntt_iii is
     
     constant MEMORY_DELAY : natural := GLOBAL_MEMORY_DELAY;
     constant TWIDDLE_DELAY : natural := 1;
@@ -159,7 +159,7 @@ end process;
 ---------------------
 -- TWIDDLE FACTORS --
 ---------------------
-mem_twiddles: entity work.mem_twiddle
+mem_twiddles: entity work.mem_twiddle_iii
 port map (
     clk => clk,
     
@@ -215,7 +215,7 @@ end process;
 -----------------------
 ---- BUTTERFLY UNITS --
 -----------------------
-dbfu:  entity work.double_bfu
+dbfu:  entity work.double_bfu_iii
 port map (
     clk => clk,
     d => bfud,
@@ -238,7 +238,7 @@ q.wdata(3) <= bfuq.B(1);
 ---------------------------
 -- read and write enable --
 ---------------------------
-wengen: entity work.dyn_shift_reg
+wengen: entity work.dyn_shift_reg_iii
 generic map (width => 1, max_depth => BUTTERFLY_DELAY_FWD + MEMORY_DELAY)
 port map (
     clk => clk,
@@ -254,7 +254,7 @@ q.wen <= wen;
 -----------------------
 -- Address Generator --
 -----------------------
-raddrgen: entity work.ntt_addr_gen
+raddrgen: entity work.ntt_addr_gen_iii
 port map (
     clk => clk,
     d => nttd,
@@ -262,7 +262,7 @@ port map (
 );
 nttd.inv <= d.inv;
 
-waddrgen: entity work.ntt_addr_gen
+waddrgen: entity work.ntt_addr_gen_iii
 port map (
     clk => clk,
     d => nttwd,
@@ -273,7 +273,7 @@ q.raddr <= nttq.addr;
 q.waddr <= nttwq.addr;
 
 waddrgen_delay <= BUTTERFLY_DELAY_FWD+MEMORY_DELAY when d.inv='0' else BUTTERFLY_DELAY_INV+MEMORY_DELAY;
-ready_delay: entity work.dyn_shift_reg
+ready_delay: entity work.dyn_shift_reg_iii
 generic map (width => 2, max_depth => BUTTERFLY_DELAY_FWD + MEMORY_DELAY)
 port map (
     clk => clk,

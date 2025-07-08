@@ -14,18 +14,18 @@ use IEEE.NUMERIC_STD.ALL;
 
 library work;
 use work.dilithium_ii.all;
-use work.interfaces.all;
+use work.interfaces_ii.all;
 use work.memmap_ii.all;
 
-entity memory is
+entity memory_ii is
     Port (
         clk : in std_logic;
         d   : in memory_in_type;
         q   : out memory_out_type
     );
-end memory;
+end memory_ii;
 
-architecture Behavioral of memory is
+architecture Behavioral of memory_ii is
     
 begin
 
@@ -33,7 +33,7 @@ begin
 -- each one stores (up to) 8 polynomials in 4 18K BRAMs 
 memgen: for i in 0 to NUM_MEM_8_POLY-1
 generate
-    mem: entity work.mem_8_poly
+    mem: entity work.mem_8_poly_ii
     port map (
         clk => clk,
         d => d(i),

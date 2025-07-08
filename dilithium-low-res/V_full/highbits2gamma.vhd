@@ -15,14 +15,14 @@ use IEEE.NUMERIC_STD.ALL;
 library work;
 use work.dilithium_v.all;
 
-entity highbits2gamma is
+entity highbits2gamma_v is
     Port (
         d : in payload_array(0 to 3);
         q : out payload_array(0 to 3)
     );
-end highbits2gamma;
+end highbits2gamma_v;
 
-architecture Behavioral of highbits2gamma is
+architecture Behavioral of highbits2gamma_v is
 
 begin
 

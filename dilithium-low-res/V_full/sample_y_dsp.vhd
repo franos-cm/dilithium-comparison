@@ -17,10 +17,10 @@ use UNISIM.vcomponents.all;
 
 library work;
 use work.dilithium_v.all;
-use work.interfaces.all;
+use work.interfaces_v.all;
 use work.memmap_v.all;
 
-entity sample_y_dsp is
+entity sample_y_dsp_v is
     port (
         clk : in std_logic;
         en  : in std_logic;
@@ -28,9 +28,9 @@ entity sample_y_dsp is
         d   : in payload_array(0 to 1);
         q   : out payload_array(0 to 1)
     );
-end sample_y_dsp;
+end sample_y_dsp_v;
 
-architecture Behavioral of sample_y_dsp is
+architecture Behavioral of sample_y_dsp_v is
     signal ALUMODE, ALUMODE2 : std_logic_vector(3 downto 0);
     signal INMODE : std_logic_vector(4 downto 0);
     signal OPMODE, OPMODE2 : std_logic_vector(6 downto 0);

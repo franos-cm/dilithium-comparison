@@ -14,18 +14,18 @@ use IEEE.NUMERIC_STD.ALL;
 
 library work;
 use work.dilithium_iii.all;
-use work.interfaces.all;
+use work.interfaces_iii.all;
 
 
-entity butterfly_dsp is
+entity butterfly_dsp_iii is
     Port ( 
            clk :  in std_logic;
            d   :  in butterfly_in_type;
            q   : out butterfly_out_type
            );
-end butterfly_dsp;
+end butterfly_dsp_iii;
 
-architecture Behavioral of butterfly_dsp is
+architecture Behavioral of butterfly_dsp_iii is
 
 constant BUTTERFLY_CASCADE_DELAY : integer := 1;
 constant BUTTERFLY_STAGE_2_DELAY : integer := 4;
@@ -63,7 +63,7 @@ signal bfap_pos, bfap_delay_out, delay_output_a_in, redq_data_delayed, adder_pos
 begin
 
 -- STAGE 1
-stage1: entity work.bfu_stage_1
+stage1: entity work.bfu_stage_1_iii
 port map (
     clk => clk,
     d => d1,
@@ -84,7 +84,7 @@ d1.en <= d.en;
 
 
 -- STAGE 2 starts at the same cycle!
-stage2: entity work.bfu_stage_2
+stage2: entity work.bfu_stage_2_iii
 port map (
     clk => clk,
     d => d2,
@@ -107,7 +107,7 @@ begin
 end process;
 d2.sign <= sign_delayed when d.inv = '1' else '0';
 
-delay_omega_high: entity work.dyn_shift_reg
+delay_omega_high: entity work.dyn_shift_reg_iii
 generic map (width => 6, max_depth => BUTTERFLY_CASCADE_DELAY)
 port map (
     clk => clk,
@@ -124,7 +124,7 @@ port map (
 
 
 -- ADDER
-adder: entity work.bfu_adder
+adder: entity work.bfu_adder_iii
 port map (
     clk => clk,
     d => da,
@@ -139,7 +139,7 @@ da.d <= (others => '0') when d.a(0) = '0' and d.b(0) = '0' else
 da.sel <= d.inv;
 da.en <= d.en;
 
-delay_a: entity work.dyn_shift_reg
+delay_a: entity work.dyn_shift_reg_iii
 generic map (width => 23, max_depth => BUTTERFLY_STAGE_2_DELAY + BUTTERFLY_CASCADE_DELAY + RED_DELAY - 1)
 port map (
     clk => clk,
@@ -167,7 +167,7 @@ end process;
 
 
 -- REDUCER
-reducer: entity work.bfu_reducer
+reducer: entity work.bfu_reducer_iii
 port map (
     clk => clk,
     d => dr,
@@ -186,7 +186,7 @@ dr.en <= d.en;
 
 
 -- MODULAR REDUCTION
-reduction: entity work.red_dsp
+reduction: entity work.red_dsp_iii
 port map (
     clk => clk,
     d => redd,
@@ -202,7 +202,7 @@ redd.data <= q2.p(28 downto 0) & q1.p;
 
 
 -- delay adder result around reducer
-delay_qap: entity work.dyn_shift_reg
+delay_qap: entity work.dyn_shift_reg_iii
 generic map (width => 23, max_depth => BUTTERFLY_REDUCER_DELAY)
 port map (
     clk => clk,
@@ -220,7 +220,7 @@ adder_pos <= qa_p_delayed when qr.p(47) = '1' else
 -- delay output a: old with dyn shift reg, new with 2 shift regs that will be transformed to CLB
 --delay_output_a_in <= redq.data when d.inv='0' else adder_pos;
 --final_delay <= 3 when d.inv='0' else 9;
---delay_output_a: entity work.dyn_shift_reg
+--delay_output_a: entity work.dyn_shift_reg_iii
 --generic map (width => 23, max_depth => 9)
 --port map (
 --    clk => clk,
@@ -230,7 +230,7 @@ adder_pos <= qa_p_delayed when qr.p(47) = '1' else
 --    q => q.A
 --);
 
-delay_redq_data: entity work.dyn_shift_reg
+delay_redq_data: entity work.dyn_shift_reg_iii
 generic map (width => 23, max_depth => 3)
 port map (
     clk => clk,
@@ -240,7 +240,7 @@ port map (
     q => redq_data_delayed
 );
 
-delay_adder_pos: entity work.dyn_shift_reg
+delay_adder_pos: entity work.dyn_shift_reg_iii
 generic map (width => 23, max_depth => 9)
 port map (
     clk => clk,

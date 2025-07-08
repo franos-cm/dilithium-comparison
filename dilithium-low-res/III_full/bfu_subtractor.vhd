@@ -17,17 +17,17 @@ use UNISIM.vcomponents.all;
 
 library work;
 use work.dilithium_iii.all;
-use work.interfaces.all;
+use work.interfaces_iii.all;
 
-entity bfu_subtracter is
+entity bfu_subtracter_iii is
     port (
         clk : in std_logic;
         d   : in bfu_subtracter_in_type;
         q   : out bfu_subtracter_out_type
     );
-end bfu_subtracter;
+end bfu_subtracter_iii;
 
-architecture Behavioral of bfu_subtracter is
+architecture Behavioral of bfu_subtracter_iii is
     signal ALUMODE : std_logic_vector(3 downto 0);
     signal INMODE : std_logic_vector(4 downto 0);
     signal OPMODE : std_logic_vector(6 downto 0);

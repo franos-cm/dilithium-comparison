@@ -18,18 +18,18 @@ use UNIMACRO.vcomponents.all;
 
 library work;
 use work.dilithium_iii.all;
-use work.interfaces.all;
+use work.interfaces_iii.all;
 use work.memmap_iii.all;
 
-entity mem_8_quarter_poly is
+entity mem_8_quarter_poly_iii is
     Port (
         clk : in std_logic;
         d   : in mem_8_quarter_poly_in_type;
         q   : out std_logic_vector(22 downto 0)
     );
-end mem_8_quarter_poly;
+end mem_8_quarter_poly_iii;
 
-architecture Behavioral of mem_8_quarter_poly is
+architecture Behavioral of mem_8_quarter_poly_iii is
 
 --    type storage_type is array(0 to 511) of std_logic_vector(22 downto 0);
 --    signal storage : storage_type := (others => (others => '0'));

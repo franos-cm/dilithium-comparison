@@ -13,20 +13,20 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 library work;
 use work.dilithium_ii.all;
-use work.interfaces.all;
+use work.interfaces_ii.all;
 use work.memmap_ii.all;
 
-entity sign_precomp is
+entity sign_precomp_ii is
     Port (
         clk : in std_logic;
         d   : in sign_precomp_in_type;
         q   : out sign_precomp_out_type
     );
-end sign_precomp;
+end sign_precomp_ii;
 
-architecture Behavioral of sign_precomp is
+architecture Behavioral of sign_precomp_ii is
 
-    type state_type is (idle, expandA, expandA_finish, ntts1, ntts1_finish, ntts1_shortcut, ntts2, ntts2_finish, ntts2_shortcut, nttt0, nttt0_finish, nttt0_shortcut);
+    type state_type is (idle, expandA_ii, expandA_finish, ntts1, ntts1_finish, ntts1_shortcut, ntts2, ntts2_finish, ntts2_shortcut, nttt0, nttt0_finish, nttt0_shortcut);
     signal state, nextstate : state_type;
     
     signal rcntd, wcntd : counter_in_type;
@@ -40,7 +40,7 @@ architecture Behavioral of sign_precomp is
 begin
 
     -- counters
-    polyvec_read_counter: entity work.counter
+    polyvec_read_counter: entity work.counter_ii
     generic map (max_value => DILITHIUM_k-1)
     port map (
         clk => clk,
@@ -49,7 +49,7 @@ begin
         value => rcnt
     );
 
-    polyvec_write_counter: entity work.counter
+    polyvec_write_counter: entity work.counter_ii
     generic map (max_value => DILITHIUM_k-1)
     port map (
         clk => clk,
@@ -123,7 +123,7 @@ begin
         pipeline_in <= m;
     end process;
     
-    -- connect keccak and expandAq
+    -- connect keccak_ii and expandAq
     q.keccakd <= d.expandAq.keccakd;
     q.expandAd.keccakq <= d.keccakq;
     
@@ -166,13 +166,13 @@ begin
             
                 if d.en = '1'
                 then
-                    nextstate <= expandA;
+                    nextstate <= expandA_ii;
                 end if;
             
             -----------------------------------------------------------------
             -- expand A
             -----------------------------------------------------------------
-            when expandA =>
+            when expandA_ii =>
                 q.expandAd.en <= '1';
                 
                 if d.expandAq.ready = '0'
@@ -316,7 +316,7 @@ begin
                 end if;
                 
             -----------------------------------------------------------------
-            -- wait for expandA to finish
+            -- wait for expandA_ii to finish
             -----------------------------------------------------------------
             when expandA_finish =>
                 q.expandAd.en <= '0';

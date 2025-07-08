@@ -14,18 +14,18 @@ use IEEE.NUMERIC_STD.ALL;
 
 library work;
 use work.dilithium_ii.all;
-use work.interfaces.all;
+use work.interfaces_ii.all;
 use work.memmap_ii.all;
 
-entity expandA is
+entity expandA_ii is
     Port (
         clk : in std_logic;
         d   : in expand_in_type;
         q   : out expand_out_type
     );
-end expandA;
+end expandA_ii;
 
-architecture Behavioral of expandA is
+architecture Behavioral of expandA_ii is
 
     type state_type is (idle, absorb, permute, squeeze, sample, reset_absorb);
     signal state, nextstate : state_type := idle;
@@ -39,12 +39,12 @@ architecture Behavioral of expandA is
     -- address tmp
     signal addr, addr_bitrev : coef_addr_array(0 to 3);
     
-    -- k and l counter
+    -- k and l counter_ii
     signal k : natural range 0 to DILITHIUM_k-1 := 0;
     signal l : natural range 0 to DILITHIUM_l := 0;
     signal kl_en, kl_ovf, kl_rst : std_logic;
     
-    -- absorb counter
+    -- absorb counter_ii
     signal abscntd : counter_in_type;
     signal abscntq : counter_out_type;
     signal abscnt : natural range 0 to SHAKE128_RATE/32;
@@ -53,18 +53,18 @@ architecture Behavioral of expandA is
     signal memcnt_en, memcnt_rst, memcnt_ovf : std_logic;
     signal memcnt : std_logic_vector(7 downto 0);
     
-    -- sample counter
+    -- sample counter_ii
     signal samplecntd, readcntd : counter_in_type;
     signal samplecntq, readcntq : counter_out_type;
     signal readcnt_rst_override, samplecnt_rst_override : std_logic;
     
-    -- squeeze counter
+    -- squeeze counter_ii
     constant SQZCNT_MAX : natural := (SHAKE128_RATE/32)-1;
     signal sqzcntd : counter_in_type;
     signal sqzcntq : counter_out_type;
     signal sqzcnt : natural range 0 to SQZCNT_MAX := 0;
     
-    -- keccak
+    -- keccak_ii
     signal keccak_din : std_logic_vector(31 downto 0);
     
     -- memory
@@ -73,7 +73,7 @@ architecture Behavioral of expandA is
 begin
 
 
--- k and l counter
+-- k and l counter_ii
 klcounter: process(clk)
 begin
     if rising_edge(clk)
@@ -122,7 +122,7 @@ current_sample(15 downto  8) <= sampledata(87 downto 80);
 current_sample( 7 downto  0) <= sampledata(95 downto 88); 
 
 
--- memory counter: offset for the coefficients that go into memory
+-- memory counter_ii: offset for the coefficients that go into memory
 memory_counter: process(clk)
 begin
     if rising_edge(clk)
@@ -149,7 +149,7 @@ end process;
 
 
 
-absorb_counter: entity work.counter
+absorb_counter: entity work.counter_ii
 generic map (max_value => SHAKE128_RATE/32)
 port map (
     clk => clk,
@@ -192,8 +192,8 @@ end process;
 
 
 
--- squeeze counter
-squeeze_counter: entity work.counter
+-- squeeze counter_ii
+squeeze_counter: entity work.counter_ii
 generic map (max_value => SQZCNT_MAX)
 port map (
     clk => clk,
@@ -202,8 +202,8 @@ port map (
     value => sqzcnt
 );
 
--- sample counter
-sample_counter: entity work.counter -- samples from sample register
+-- sample counter_ii
+sample_counter: entity work.counter_ii -- samples from sample register
 generic map (max_value => 96/24-1)
 port map (
     clk => clk,
@@ -212,7 +212,7 @@ port map (
     value => open
 );
 
-read_counter: entity work.counter -- read from keccak to sample register
+read_counter: entity work.counter_ii -- read from keccak_ii to sample register
 generic map (max_value => 2)
 port map (
     clk => clk,
@@ -222,7 +222,7 @@ port map (
 );
 memcnt_en <= counter_en and sample_accept;
 
--- keccak
+-- keccak_ii
 q.keccakd.data <= keccak_din when abscntd.en = '1' else d.keccakq.data;
 
 
@@ -302,7 +302,7 @@ begin
             -- memory deactivated in idle state
             mem <= '0';
             
-            -- keccak and memory
+            -- keccak_ii and memory
             q.keccakd.en <= '0';
             q.keccakd.rst <= '1';
             
@@ -331,7 +331,7 @@ begin
             end if;
             
         when absorb =>
-            -- keccak and memory
+            -- keccak_ii and memory
             q.keccakd.en <= '1';
             q.keccakd.rst <= '0';
             
@@ -360,7 +360,7 @@ begin
             end if;
             
         when permute =>
-            -- keccak and memory
+            -- keccak_ii and memory
             q.keccakd.en <= '0';
             q.keccakd.rst <= '0';
             
@@ -389,7 +389,7 @@ begin
             end if;
             
         when squeeze =>
-            -- keccak and memory
+            -- keccak_ii and memory
             q.keccakd.en <= '1';
             q.keccakd.rst <= '0';
             
@@ -422,7 +422,7 @@ begin
             end if;
             
         when sample =>
-            -- keccak and memory
+            -- keccak_ii and memory
             q.keccakd.en <= '0';
             q.keccakd.rst <= '0';
             
@@ -460,7 +460,7 @@ begin
             end if;
             
         when reset_absorb =>
-            -- keccak and memory
+            -- keccak_ii and memory
             q.keccakd.en <= '0';
             q.keccakd.rst <= '1';
             

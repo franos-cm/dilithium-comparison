@@ -14,18 +14,18 @@ use IEEE.NUMERIC_STD.ALL;
 
 library work;
 use work.dilithium_iii.all;
-use work.interfaces.all;
+use work.interfaces_iii.all;
 use work.memmap_iii.all;
 
-entity sign is
+entity sign_iii is
     Port (
         clk : in std_logic;
         d : in sign_in_type;
         q : out sign_out_type
     );
-end sign;
+end sign_iii;
 
-architecture Behavioral of sign is
+architecture Behavioral of sign_iii is
 
 type state_type is (idle,
 absorbK, absorbmu, padding, zeropad, permute, squeeze,
@@ -92,13 +92,13 @@ begin
 ----------------------------------------------------------------------------------------------------------
 -- make hint stuff
 ----------------------------------------------------------------------------------------------------------
-highbitslut: entity work.highbits
+highbitslut: entity work.highbits_iii
 port map (
     clk => clk,
     d => highwcs2d,
     q => highwcs2q
 );
-highbitslut2: entity work.highbits
+highbitslut2: entity work.highbits_iii
 port map (
     clk => clk,
     d => highct0d,
@@ -117,7 +117,7 @@ q.hregd.poly_offset <= std_logic_vector(to_unsigned(omegacnt, 8));-- when memcnt
 ----------------------------------------------------------------------------------------------------------
 -- highbits * 2*gamma2 LUT module
 ----------------------------------------------------------------------------------------------------------
-high2gammalut: entity work.highbits2gamma
+high2gammalut: entity work.highbits2gamma_iii
 port map (
     d => hb2glutd,
     q => hb2glutq
@@ -163,7 +163,7 @@ q.expandyd.seedregq <= d.rhoprimeregq;
 rhoprimeregd_sign.data <= d.keccakq.data;
 
 ----------------------------------------------------------------------------------------------------------
--- keccak, ntt, macc, register muxes
+-- keccak_iii, ntt, macc, register muxes
 ----------------------------------------------------------------------------------------------------------
 with state
 select
@@ -514,7 +514,7 @@ begin
 end process;
 
 ----------------------------------------------------------------------------------------------------------
--- counter
+-- counter_iii
 ----------------------------------------------------------------------------------------------------------
 kappa_counter: process(clk)
 begin
@@ -531,7 +531,7 @@ begin
 end process;
 q.expandyd.kappa <= kappa;
 
-sha_counter: entity work.counter
+sha_counter: entity work.counter_iii
 generic map (max_value => SHAKE256_RATE/32-1)
 port map (
     clk => clk,
@@ -540,7 +540,7 @@ port map (
     value => shacnt
 );
 
-k_counter: entity work.counter
+k_counter: entity work.counter_iii
 generic map (max_value => DILITHIUM_k-1)
 port map (
     clk => clk,
@@ -549,7 +549,7 @@ port map (
     value => kcnt
 );
 
-l_counter: entity work.counter
+l_counter: entity work.counter_iii
 generic map (max_value => DILITHIUM_l-1)
 port map (
     clk => clk,
@@ -558,7 +558,7 @@ port map (
     value => lcnt
 );
 
-memory_counter: entity work.counter
+memory_counter: entity work.counter_iii
 generic map (max_value => DILITHIUM_k*DILITHIUM_N+GLOBAL_MEMORY_DELAY-1)
 port map (
     clk => clk,
@@ -567,7 +567,7 @@ port map (
     value => memcnt
 );
 
-omega_counter: entity work.counter
+omega_counter: entity work.counter_iii
 generic map (max_value => DILITHIUM_omega-1)
 port map (
     clk => clk,
@@ -577,7 +577,7 @@ port map (
 );
 
 ----------------------------------------------------------------------------------------------------------
--- keccak input
+-- keccak_iii input
 ----------------------------------------------------------------------------------------------------------
 kecin: process(state, d, shacnt)
 begin

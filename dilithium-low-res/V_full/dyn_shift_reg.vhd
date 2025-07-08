@@ -12,7 +12,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.ALL;
 
-entity dyn_shift_reg is
+entity dyn_shift_reg_v is
   Generic (
     width     : natural := 10;
     max_depth : natural := 255
@@ -24,9 +24,9 @@ entity dyn_shift_reg is
       d     : in  std_logic_vector(width-1 downto 0) := (others => '0');
       q     : out std_logic_vector(width-1 downto 0) := (others => '0')
   );
-end dyn_shift_reg;
+end dyn_shift_reg_v;
 
-architecture Behavioral of dyn_shift_reg is
+architecture Behavioral of dyn_shift_reg_v is
   
   type storage_type is array (max_depth downto 0) of std_logic_vector(width-1 downto 0);
   signal storage : storage_type := (others => (others => '0'));

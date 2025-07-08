@@ -17,7 +17,7 @@ module adapter_low_res (
     // Low res interface, inverted
     output  logic [3:0]   op_in,
     output  logic         op_valid_in,
-    input   logic         ready_out,
+    input   logic         ready_out
 
     // output  logic [31:0]  data_in,
     // output  logic         ready_rcv_in,
@@ -28,17 +28,17 @@ module adapter_low_res (
 );
 
     localparam logic[1:0] KEYGEN_MODE = 0;
-    localparam logic[1:0] SIGN_MODE = 2d'2;
-    localparam logic[1:0] VERIFY_MODE = 2d'1;
+    localparam logic[1:0] SIGN_MODE = 2'd2;
+    localparam logic[1:0] VERIFY_MODE = 2'd1;
 
-    localparam logic[1:0] INGEST_OPCODE = 2b'11;
-    localparam logic[1:0] DUMP_OPCODE = 2b'10;
-    localparam logic[1:0] PK_SUB_OPCODE = 2b'00;
-    localparam logic[1:0] SK_SUB_OPCODE = 2b'01;
-    localparam logic[1:0] SIG_SUB_OPCODE = 2b'10;
-    localparam logic[1:0] SEED_SUB_OPCODE = 2b'11;
+    localparam logic[1:0] INGEST_OPCODE = 2'b11;
+    localparam logic[1:0] DUMP_OPCODE = 2'b10;
+    localparam logic[1:0] PK_SUB_OPCODE = 2'b00;
+    localparam logic[1:0] SK_SUB_OPCODE = 2'b01;
+    localparam logic[1:0] SIG_SUB_OPCODE = 2'b10;
+    localparam logic[1:0] SEED_SUB_OPCODE = 2'b11;
 
-    localparam logic[3:0] KEYGEN_OPCODE = 4b'0111;
+    localparam logic[3:0] KEYGEN_OPCODE = 4'b0111;
 
 
     // constant PAYLOAD_TYPE_PK   : std_logic_vector(1 downto 0) := "00";

@@ -15,16 +15,16 @@ use IEEE.NUMERIC_STD.ALL;
 library work;
 use work.dilithium_iii.all;
 
-entity use_hint_lut is
+entity use_hint_lut_iii is
     Port (
         clk : in std_logic;
         d : in std_logic_vector(22 downto 0);
         q0 : out std_logic_vector(22 downto 0);
         q1 : out std_logic_vector(22 downto 0)
     );
-end use_hint_lut;
+end use_hint_lut_iii;
 
-architecture Behavioral of use_hint_lut is
+architecture Behavioral of use_hint_lut_iii is
 
 signal q0tmp, q1tmp : std_logic_vector(5 downto 0);
 

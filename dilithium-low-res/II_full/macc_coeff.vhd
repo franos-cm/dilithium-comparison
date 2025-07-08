@@ -17,17 +17,17 @@ use UNISIM.vcomponents.all;
 
 library work;
 use work.dilithium_ii.all;
-use work.interfaces.all;
+use work.interfaces_ii.all;
 
-entity macc_coeff is
+entity macc_coeff_ii is
     Port (
         clk : std_logic;
         d   : in macc_coeff_in_type;
         q   : out macc_coeff_out_type
     );
-end macc_coeff;
+end macc_coeff_ii;
 
-architecture Behavioral of macc_coeff is
+architecture Behavioral of macc_coeff_ii is
 
     type red_in_array is array(0 to 3) of red_dsp_in_type;
     type red_out_array is array(0 to 3) of red_dsp_out_type;
@@ -45,7 +45,7 @@ begin
 
     redgen: for i in 0 to 3
     generate
-        red: entity work.red_dsp
+        red: entity work.red_dsp_ii
         port map (
             clk => clk,
             d => redd(i),
@@ -58,7 +58,7 @@ begin
     
     maccgen: for i in 0 to 3
     generate
-        macc: entity work.macc_dsp
+        macc: entity work.macc_dsp_ii
         port map (
             clk => clk,
             d => maccd(i),

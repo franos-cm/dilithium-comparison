@@ -14,17 +14,17 @@ use IEEE.NUMERIC_STD.ALL;
 
 library work;
 use work.dilithium_ii.all;
-use work.interfaces.all;
+use work.interfaces_ii.all;
 
-entity macc_poly is
+entity macc_poly_ii is
     Port (
         clk : in std_logic;
         d   : in macc_poly_in_type;
         q   : out macc_poly_out_type
     );
-end macc_poly;
+end macc_poly_ii;
 
-architecture Behavioral of macc_poly is
+architecture Behavioral of macc_poly_ii is
     
     constant MACC_DELAY : natural := 14;
     constant ADD_DELAY : natural := 4;
@@ -64,7 +64,7 @@ begin
     end if;
 end process;
 
-macc: entity work.macc_coeff
+macc: entity work.macc_coeff_ii
 port map (
     clk => clk,
     d => maccd_reg,

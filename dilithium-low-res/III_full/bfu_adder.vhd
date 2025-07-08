@@ -17,18 +17,18 @@ use UNISIM.vcomponents.all;
 
 library work;
 use work.dilithium_iii.all;
-use work.interfaces.all;
+use work.interfaces_iii.all;
 use work.memmap_iii.all;
 
-entity bfu_adder is
+entity bfu_adder_iii is
     port (
         clk : in std_logic;
         d   : in bfu_adder_in_type;
         q   : out bfu_adder_out_type
     );
-end bfu_adder;
+end bfu_adder_iii;
 
-architecture Behavioral of bfu_adder is
+architecture Behavioral of bfu_adder_iii is
     signal ALUMODE : std_logic_vector(3 downto 0);
     signal INMODE : std_logic_vector(4 downto 0);
     signal OPMODE : std_logic_vector(6 downto 0);
@@ -62,7 +62,7 @@ begin
     DD(23 downto 0) <= d.d;
     
     -- delay C
-    delay_c: entity work.dyn_shift_reg
+    delay_c: entity work.dyn_shift_reg_iii
     generic map (width => 24, max_depth => 2)
     port map (
         clk => clk,

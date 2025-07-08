@@ -17,17 +17,17 @@ use UNISIM.vcomponents.all;
 
 library work;
 use work.dilithium_v.all;
-use work.interfaces.all;
+use work.interfaces_v.all;
 
-entity macc_dsp is
+entity macc_dsp_v is
     Port (
         clk : std_logic;
         d   : in macc_dsp_in_type;
         q   : out std_logic_vector(45 downto 0)
     );
-end macc_dsp;
+end macc_dsp_v;
 
-architecture Behavioral of macc_dsp is
+architecture Behavioral of macc_dsp_v is
     signal ALUMODE_l, ALUMODE_h : std_logic_vector(3 downto 0);
     signal INMODE_l, INMODE_h : std_logic_vector(4 downto 0);
     signal OPMODE_l, OPMODE_h : std_logic_vector(6 downto 0);
@@ -105,7 +105,7 @@ begin
     end process;
     
     -- delay input C
-    delay_c: entity work.dyn_shift_reg
+    delay_c: entity work.dyn_shift_reg_v
     generic map (width => 23, max_depth => 1)
     port map (
         clk => clk,

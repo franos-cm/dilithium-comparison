@@ -18,7 +18,7 @@
 -- LAST CHANGES:            10/01/2020
 -- MODULE NAME:			    KECCAK_SETTINGS
 --
--- REVISION:				1.00 - Contains all settings for the KECCAK core
+-- REVISION:				1.00 - Contains all settings for the keccak_v core
 --
 -- LICENCE: 				Please look at licence.txt
 -- USAGE INFORMATION:	    Please look at readme.txt. If licence.txt or readme.txt
@@ -55,7 +55,7 @@ LIBRARY IEEE;
 PACKAGE keccak_settings IS 
 
     -- SETTINGS ------------------------------------------------------------------
-    -- Settings KECCAK
+    -- Settings keccak_v
     CONSTANT STATE_WIDTH        : integer := 1600;                  -- Size of the state (unrolled matrix)
     CONSTANT RATE               : integer := 1344;                  -- The rate is used to determine the number of random output bits
     CONSTANT N_R                : integer := 24;                    -- n_r = 12 + 2*log2(LANE_WIDTH) - How to calculate this in VHDL?
@@ -72,7 +72,7 @@ PACKAGE keccak_settings IS
     CONSTANT RATE_LANES         : integer := RATE / LANE_WIDTH; 
     CONSTANT NUM_ROTATE         : integer := RATE / ROTATE_WIDTH;
 
-    -- define the keccak matrix
+    -- define the keccak_v matrix
     SUBTYPE dim1 IS STD_LOGIC_VECTOR(LANE_WIDTH-1 DOWNTO 0);
     TYPE dim1_vector IS ARRAY(natural RANGE <>) OF dim1;
     SUBTYPE dim2 IS dim1_vector(4 DOWNTO 0);

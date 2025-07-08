@@ -14,25 +14,25 @@ use IEEE.NUMERIC_STD.ALL;
 
 library work;
 use work.dilithium_v.all;
-use work.interfaces.all;
+use work.interfaces_v.all;
 use work.memmap_v.all;
 
-entity matmul is
+entity matmul_v is
     Port (
         clk : in std_logic;
         d   : in matmul_in_type;
         q   : out matmul_out_type
     );
-end matmul;
+end matmul_v;
 
-architecture Behavioral of matmul is
+architecture Behavioral of matmul_v is
 
     type state_type is (idle, ntt_first, ntt_wait_first, ntt_start, 
     macc_start, macc, macc_shortcut, macc_finish, ntt_finish);
     signal state, nextstate : state_type;
     
     
-    -- counter
+    -- counter_v
     type lcnt_type is array(0 to 1) of natural range 0 to DILITHIUM_l-1;
     signal lcnt : lcnt_type;
     signal l_en, l_rst, l_ovf : std_logic_vector(0 to 1);
@@ -69,7 +69,7 @@ begin
     end if;
 end process;
 
--- counter
+-- counter_v
 cntr: process(clk)
 begin
     if rising_edge(clk)
@@ -141,7 +141,7 @@ begin
     mem_macc <= '0';
     mem_macc_read_resvec <= '0';
     
-    -- counter ctrl
+    -- counter_v ctrl
     l_en <= "00";
     l_rst <= "11";
     l_macc_en <= '0';
@@ -172,7 +172,7 @@ begin
         when ntt_first =>
             q.ready <= '0';
     
-            -- counter
+            -- counter_v
             l_en <= "00";
             l_rst <= "00";
             k_en <= "00";
@@ -191,7 +191,7 @@ begin
         when ntt_wait_first =>
             q.ready <= '0';
     
-            -- counter
+            -- counter_v
             l_en <= "00";
             l_rst <= "00";
             k_en <= "00";
@@ -211,7 +211,7 @@ begin
         when ntt_start =>
             q.ready <= '0';
             
-            -- counter
+            -- counter_v
             l_en <= "00";
             l_rst <= "00";
             k_en <= "00";
@@ -240,7 +240,7 @@ begin
         when macc_start =>
             q.ready <= '0';
             
-            -- counter
+            -- counter_v
             l_en <= "00";
             l_rst <= "00";
             k_en <= "00";
@@ -273,7 +273,7 @@ begin
         when macc =>
             q.ready <= '0';
             
-            -- counter
+            -- counter_v
             l_en <= "00";
             l_rst <= "00";
             k_en <= "00";
@@ -311,7 +311,7 @@ begin
         when macc_shortcut =>
             q.ready <= '0';
             
-            -- counter
+            -- counter_v
             l_en <= "00";
             l_rst <= "00";
             k_en <= "00";
@@ -343,7 +343,7 @@ begin
         when macc_finish =>
             q.ready <= '0';
             
-            -- counter
+            -- counter_v
             l_en <= "00";
             l_rst <= "00";
             k_en <= "00";
@@ -389,7 +389,7 @@ begin
         when ntt_finish =>
             q.ready <= '0';
             
-            -- counter
+            -- counter_v
             l_en <= "00";
             l_rst <= "00";
             k_en <= "00";

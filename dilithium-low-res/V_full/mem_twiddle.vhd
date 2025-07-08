@@ -18,17 +18,17 @@ LIBRARY UNIMACRO;
     
 library work;
 use work.dilithium_v.all;
-use work.interfaces.all;
+use work.interfaces_v.all;
 
-entity mem_twiddle is
+entity mem_twiddle_v is
     port (
         clk : in std_logic;
         d   : in mem_twiddle_in_type;
         q   : out mem_twiddle_out_type
     );
-end mem_twiddle;
+end mem_twiddle_v;
 
-architecture Behavioral of mem_twiddle is
+architecture Behavioral of mem_twiddle_v is
 
     type tmpout_type is array(0 to 1) of std_logic_vector(31 downto 0);
     signal tmpout : tmpout_type;

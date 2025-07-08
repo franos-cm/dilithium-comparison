@@ -6,14 +6,14 @@
 --
 -- CREATE DATE:			    13/12/2018
 -- LAST CHANGES:            13/12/2018
--- MODULE NAME:			    KECCAK_ROUND
+-- MODULE NAME:			    keccak_round_low_res
 --
--- REVISION:				1.00 - Implements the KECCAK permutation function
+-- REVISION:				1.00 - Implements the keccak_v permutation function
 --
 -- LICENCE: 				Please look at licence.txt
 -- USAGE INFORMATION:	    Please look at readme.txt. If licence.txt or readme.txt
 --							are missing or if you have questions regarding the code
---							please contact Tim Güneysu (tim.gueneysu@rub.de) and
+--							please contact Tim Gï¿½neysu (tim.gueneysu@rub.de) and
 --                          Jan Richter-Brockmann (jan.richter-brockmann@rub.de)
 --
 -- THIS CODE AND INFORMATION ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY 
@@ -31,15 +31,15 @@ LIBRARY work;
     
     
 
-ENTITY KECCAK_ROUND IS
+ENTITY keccak_round_low_res IS
     PORT ( state_IN     : IN  keccak_m;
            state_out    : OUT keccak_m;
            round_number : IN  STD_LOGIC_VECTOR ((CNT_LENGTH_ROUND-1) DOWNTO 0)
            );
-END KECCAK_ROUND;
+END keccak_round_low_res;
 
 
-ARCHITECTURE Behavioral OF KECCAK_ROUND IS
+ARCHITECTURE Behavioral OF keccak_round_low_res IS
 
 
 

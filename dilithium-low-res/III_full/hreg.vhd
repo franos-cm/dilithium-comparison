@@ -13,17 +13,17 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 library work;
 use work.dilithium_iii.all;
-use work.interfaces.all;
+use work.interfaces_iii.all;
 
-entity hreg is
+entity hreg_iii is
     Port (
         clk : in std_logic;
         d   : in hreg_in_type;
         q   : out hreg_out_type
     );
-end hreg;
+end hreg_iii;
 
-architecture Behavioral of hreg is
+architecture Behavioral of hreg_iii is
 
     type byte_array is array(natural range <>) of std_logic_vector(7 downto 0);
     signal data_off : byte_array(0 to DILITHIUM_omega-1);

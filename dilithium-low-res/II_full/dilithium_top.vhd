@@ -13,7 +13,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 library work;
 use work.dilithium_ii.all;
-use work.interfaces.all;
+use work.interfaces_ii.all;
 use work.memmap_ii.all;
 
 entity dilithium_top_ii is
@@ -45,7 +45,7 @@ architecture Behavioral of dilithium_top_ii is
     signal memd, memdreg : memory_in_type := (others => ZEROMEM);
     signal memq, memqreg : memory_out_type;
     
-    -- OP interfaces
+    -- OP interfaces_ii
     signal keygend : keygen_in_type;
     signal keygenq : keygen_out_type;
     signal signd : sign_in_type;
@@ -63,7 +63,7 @@ architecture Behavioral of dilithium_top_ii is
     signal stored : store_in_type;
     signal storeq : store_out_type;
     
-    -- module interfaces
+    -- module interfaces_ii
     signal keccakd : keccak_in_type;
     signal keccakq : keccak_out_type;
     signal nttd : ntt_in_type;
@@ -87,13 +87,13 @@ architecture Behavioral of dilithium_top_ii is
     signal convyzd : convert_yz_in_type;
     signal convyzq : payload_array(0 to 3);
     
-    -- global register interfaces
+    -- global register interfaces_ii
     signal rhoregd, rhoprimeregd, Kregd, trregd, seedregd, chashregd, muregd : reg32_in_type;
     signal rhoregq, rhoprimeregq, Kregq, trregq, seedregq, chashregq, muregq : reg32_out_type;
     signal hregd : hreg_in_type;
     signal hregq : hreg_out_type;
 
-    -- global fifo interfaces
+    -- global fifo interfaces_ii
     signal fifoyzd : fifo_in_type;
     signal fifoyzdataq : std_logic_vector((DILITHIUM_loggamma1+1)*4-1 downto 0);
     signal fifoyzq : fifo_out_type;
@@ -278,7 +278,7 @@ end process;
 ------------------------------------------------------------------------------------
 -- memory controller
 ------------------------------------------------------------------------------------
-memctrl: entity work.memory
+memctrl: entity work.memory_ii
 port map (
     clk => clk,
     d => memdreg,
@@ -295,9 +295,9 @@ begin
 end process;
 
 ------------------------------------------------------------------------------------
--- keygen module
+-- keygen_ii module
 ------------------------------------------------------------------------------------
-keygenctrl: entity work.keygen
+keygenctrl: entity work.keygen_ii
 port map (
     clk => clk,
     d => keygend,
@@ -322,7 +322,7 @@ keygend.rhoprimeregq <= rhoprimeregq;
 ------------------------------------------------------------------------------------
 -- store module
 ------------------------------------------------------------------------------------
-storectrl: entity work.store
+storectrl: entity work.store_ii
 port map (
     clk => clk,
     d => stored,
@@ -343,7 +343,7 @@ stored.fifot0dataq <= fifot0dataq;
 ------------------------------------------------------------------------------------
 -- load module
 ------------------------------------------------------------------------------------
-loadctrl: entity work.load
+loadctrl: entity work.load_ii
 port map (
     clk => clk,
     d => loadd,
@@ -364,7 +364,7 @@ loadd.chashregq <= chashregq;
 ------------------------------------------------------------------------------------
 -- verify module
 ------------------------------------------------------------------------------------
-vrfyctrl: entity work.verify
+vrfyctrl: entity work.verify_ii
 port map (
     clk => clk,
     d => vrfyd,
@@ -386,7 +386,7 @@ vrfyd.chkzq <= chkzq;
 ------------------------------------------------------------------------------------
 -- verify_precomp module
 ------------------------------------------------------------------------------------
-prevrfyctrl: entity work.verify_precomp
+prevrfyctrl: entity work.verify_precomp_ii
 port map (
     clk => clk,
     d => prevrfyd,
@@ -403,7 +403,7 @@ prevrfyd.rhoregq <= rhoregq;
 ------------------------------------------------------------------------------------
 -- sign module
 ------------------------------------------------------------------------------------
-signctrl: entity work.sign
+signctrl: entity work.sign_ii
 port map (
     clk => clk,
     d => signd,
@@ -430,9 +430,9 @@ signd.fifoyzq <= fifoyzq;
 signd.fifoyzdataq <= fifoyzdataq;
 
 ------------------------------------------------------------------------------------
--- sign_precomp module
+-- sign_precomp_ii module
 ------------------------------------------------------------------------------------
-presignctrl: entity work.sign_precomp
+presignctrl: entity work.sign_precomp_ii
 port map (
     clk => clk,
     d => presignd,
@@ -448,7 +448,7 @@ presignd.rhoregq <= rhoregq;
 ------------------------------------------------------------------------------------
 -- digest message module
 ------------------------------------------------------------------------------------
-dmsgctrl: entity work.digest_msg
+dmsgctrl: entity work.digest_msg_ii
 port map (
     clk => clk,
     d => dmsgd,
@@ -464,84 +464,84 @@ dmsgd.trregq <= trregq;
 ------------------------------------------------------------------------------------
 -- global modules
 ------------------------------------------------------------------------------------
-matmulctrl: entity work.matmul
+matmulctrl: entity work.matmul_ii
 port map (
     clk => clk,
     d => matmuld,
     q => matmulq
 );
 
-maccctrl: entity work.macc_poly
+maccctrl: entity work.macc_poly_ii
 port map (
     clk => clk,
     d => maccd,
     q => maccq
 );
 
-nttctrl: entity work.ntt
+nttctrl: entity work.ntt_ii
 port map (
     clk => clk,
     d => nttd,
     q => nttq
 );
 
-keccakctrl: entity work.keccak
+keccakctrl: entity work.keccak_ii
 port map (
     clk => clk,
     d => keccakd,
     q => keccakq
 );
 
-expand_A_ctrl: entity work.expandA
+expand_A_ctrl: entity work.expandA_ii
 port map (
     clk => clk,
     d => expandAd,
     q => expandAq
 );
 
-expand_s1s2_ctrl: entity work.expands1s2
+expand_s1s2_ctrl: entity work.expands1s2_ii
 port map (
     clk => clk,
     d => expands1s2d,
     q => expands1s2q
 );
 
-expand_y_ctrl: entity work.expand_y
+expand_y_ctrl: entity work.expand_y_ii
 port map (
     clk => clk,
     d => expandyd,
     q => expandyq
 );
 
-crh_rho_t1_ctrl: entity work.crh_rho_t1
+crh_rho_t1_ctrl: entity work.crh_rho_t1_ii
 port map (
     clk => clk,
     d => crtd,
     q => crtq
 );
 
-convert_yz_ctrl: entity work.convert_yz
+convert_yz_ctrl: entity work.convert_yz_ii
 port map (
     clk => clk,
     d => convyzd,
     q => convyzq
 );
 
-hint_ctrl: entity work.use_hint
+hint_ctrl: entity work.use_hint_ii
 port map (
     clk => clk,
     d => usehintd,
     q => usehintq
 );
     
-ballsamplectrl: entity work.ballsample
+ballsamplectrl: entity work.ballsample_ii
 port map (
     clk => clk,
     d => ballsampled,
     q => ballsampleq
 );
 
-zcheckctrl: entity work.check_z
+zcheckctrl: entity work.check_z_ii
 port map (
     clk => clk,
     d => chkzd,
@@ -552,56 +552,56 @@ port map (
 ------------------------------------------------------------------------------------
 -- global registers
 ------------------------------------------------------------------------------------
-rhoreg: entity work.reg32
+rhoreg: entity work.reg32_ii
 generic map (width => 256)
 port map (
     clk => clk,
     d => rhoregd,
     q => rhoregq
 );
-rhoprimereg: entity work.reg32
+rhoprimereg: entity work.reg32_ii
 generic map (width => 512)
 port map (
     clk => clk,
     d => rhoprimeregd,
     q => rhoprimeregq
 );
-Kreg: entity work.reg32
+Kreg: entity work.reg32_ii
 generic map (width => 256)
 port map (
     clk => clk,
     d => Kregd,
     q => Kregq
 );
-trreg: entity work.reg32
+trreg: entity work.reg32_ii
 generic map (width => 256)
 port map (
     clk => clk,
     d => trregd,
     q => trregq
 );
-chashreg: entity work.reg32
+chashreg: entity work.reg32_ii
 generic map (width => 256)
 port map (
     clk => clk,
     d => chashregd,
     q => chashregq
 );
-seedreg: entity work.reg32
+seedreg: entity work.reg32_ii
 generic map (width => 256)
 port map (
     clk => clk,
     d => seedregd,
     q => seedregq
 );
-mureg: entity work.reg32
+mureg: entity work.reg32_ii
 generic map (width => 512)
 port map (
     clk => clk,
     d => muregd,
     q => muregq
 );
-hregister: entity work.hreg
+hregister: entity work.hreg_ii
 port map (
     clk => clk,
     d => hregd,
@@ -611,7 +611,7 @@ port map (
 ------------------------------------------------------------------------------------
 -- global fifos
 ------------------------------------------------------------------------------------
-fifoyz: entity work.fifo
+fifoyz: entity work.fifo_ii
 generic map (
     buf_width => 288 - (DILITHIUM_loggamma1/19)*128,
     input_length => 32,
@@ -625,7 +625,7 @@ port map (
     dataq => fifoyzdataq
 );
 
-fifo160: entity work.fifo
+fifo160: entity work.fifo_ii
 generic map (
     buf_width => 160,
     input_length => 32,
@@ -639,7 +639,7 @@ port map (
     dataq => fifo160dataq
 );
 
-fifot0: entity work.fifo
+fifot0: entity work.fifo_ii
 generic map (buf_width => 416, input_length => 32, output_length => 52)
 port map (
     clk => clk,

@@ -14,18 +14,18 @@ use IEEE.NUMERIC_STD.ALL;
 
 library work;
 use work.dilithium_ii.all;
-use work.interfaces.all;
+use work.interfaces_ii.all;
 use work.memmap_ii.all;
 
-entity verify is
+entity verify_ii is
     Port (
         clk : in std_logic;
         d   : in verify_in_type;
         q   : out verify_out_type
     );
-end verify;
+end verify_ii;
 
-architecture Behavioral of verify is
+architecture Behavioral of verify_ii is
 
     type state_type is (idle, 
     check_z_start, 
@@ -93,7 +93,7 @@ begin
         pimcr := 0;
         case state is
             when check_z_start | ballsample | ballsample_start | ballsample_finish =>
-                -- special case! ballsample writes only, check_z reads only
+                -- special case! ballsample writes only, check_z_ii reads only
                 for m in 0 to NUM_MEM_8_POLY-1
                 loop
                     memd_vrfy(m).ren <= d.chkzq.memd(m).ren;
@@ -231,9 +231,9 @@ begin
     q.matmuld.memq <= d.memq;
 
     ----------------------------------------------------------------------------------------------------
-    -- k counter
+    -- k counter_ii
     ----------------------------------------------------------------------------------------------------
-    k_counter: entity work.counter
+    k_counter: entity work.counter_ii
     generic map (max_value => DILITHIUM_k-1)
     port map (
         clk => clk,

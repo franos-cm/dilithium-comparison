@@ -17,17 +17,17 @@ use UNISIM.vcomponents.all;
 
 library work;
 use work.dilithium_v.all;
-use work.interfaces.all;
+use work.interfaces_v.all;
 
-entity bfu_stage_2 is
+entity bfu_stage_2_v is
     port (
         clk : in std_logic;
         d   : in bfu_stage_2_in_type;
         q   : out bfu_stage_2_out_type
     );
-end bfu_stage_2;
+end bfu_stage_2_v;
 
-architecture Behavioral of bfu_stage_2 is
+architecture Behavioral of bfu_stage_2_v is
     signal ALUMODE : std_logic_vector(3 downto 0);
     signal INMODE : std_logic_vector(4 downto 0);
     signal OPMODE : std_logic_vector(6 downto 0);

@@ -14,18 +14,18 @@ use IEEE.NUMERIC_STD.ALL;
 
 library work;
 use work.dilithium_ii.all;
-use work.interfaces.all;
+use work.interfaces_ii.all;
 use work.memmap_ii.all;
 
-entity mem_8_poly is
+entity mem_8_poly_ii is
     Port (
         clk : in std_logic;
         d   : in mem_8_poly_in_type;
         q   : out payload_array(0 to 3)
     );
-end mem_8_poly;
+end mem_8_poly_ii;
 
-architecture Behavioral of mem_8_poly is
+architecture Behavioral of mem_8_poly_ii is
 
     constant MEMORY_DELAY : natural := 3;
     
@@ -50,7 +50,7 @@ end process;
 
 memgen: for i in 0 to 3
 generate
-    mem: entity work.mem_8_quarter_poly
+    mem: entity work.mem_8_quarter_poly_ii
     port map (
         clk => clk,
         

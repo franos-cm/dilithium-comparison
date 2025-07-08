@@ -14,18 +14,18 @@ use IEEE.NUMERIC_STD.ALL;
 
 library work;
 use work.dilithium_ii.all;
-use work.interfaces.all;
+use work.interfaces_ii.all;
 use work.memmap_ii.all;
 
-entity use_hint is
+entity use_hint_ii is
     Port (
         clk : in std_logic;
         d   : in use_hint_in_type;
         q   : out use_hint_out_type
     );
-end use_hint;
+end use_hint_ii;
 
-architecture Behavioral of use_hint is
+architecture Behavioral of use_hint_ii is
 
 type state_type is (idle, absorb_mu, loadhint, hint, absorb, zeropad, zeropad_squeeze, padding_start, padding_finish, permute, permute_squeeze, squeeze, result_good, result_bad);
 signal state, nextstate : state_type;
@@ -98,7 +98,7 @@ end generate;
 
 absreg32: if DILITHIUM_gamma2 = (DILITHIUM_Q-1)/32
 generate
-    load_counter: entity work.counter
+    load_counter: entity work.counter_ii
     generic map (max_value => 1)
     port map (
         clk => clk,
@@ -121,14 +121,14 @@ generate
 end generate;
 absreg96: if DILITHIUM_gamma2 = (DILITHIUM_Q-1)/88
 generate
-    load_counter: entity work.counter
+    load_counter: entity work.counter_ii
     generic map (max_value => 3)
     port map (
         clk => clk,
         d => lcntd,
         q => lcntq
     );
-    keccak_counter: entity work.counter
+    keccak_counter: entity work.counter_ii
     generic map (max_value => 2)
     port map (
         clk => clk,
@@ -186,7 +186,7 @@ end process;
 
 hintlutgen: for i in 0 to 3
 generate
-    hintlut: entity work.use_hint_lut
+    hintlut: entity work.use_hint_lut_ii
     port map (
         clk => clk,
         d => hintlutd(i),
@@ -195,7 +195,7 @@ generate
     );
 end generate;
 
-memory_counter: entity work.counter
+memory_counter: entity work.counter_ii
 generic map (max_value => DILITHIUM_k*DILITHIUM_N/4-1)
 port map (
     clk => clk,
@@ -204,7 +204,7 @@ port map (
     value => memcnt
 );
 
-omega_counter: entity work.counter
+omega_counter: entity work.counter_ii
 generic map (max_value => DILITHIUM_omega-1)
 port map (
     clk => clk,
@@ -213,7 +213,7 @@ port map (
     value => omegacnt
 );
 
-omega_k_counter: entity work.counter
+omega_k_counter: entity work.counter_ii
 generic map (max_value => DILITHIUM_k)
 port map (
     clk => clk,
@@ -222,7 +222,7 @@ port map (
     value => omegakcnt
 );
 
-absorb_counter: entity work.counter
+absorb_counter: entity work.counter_ii
 generic map (max_value => SHAKE256_RATE/32-1)
 port map (
     clk => clk,
@@ -349,7 +349,7 @@ begin
             if (memcnt mod (DILITHIUM_N/4)) /= to_integer(unsigned(d.hregq.data_offset(7 downto 2)))
             or (memcnt / (DILITHIUM_N/4)) /= omegakcnt 
             or omegakcntq.ovf = '1' -- all hints read
-            or d.nohint_writechash = '1' -- no hints, just compute highbits
+            or d.nohint_writechash = '1' -- no hints, just compute highbits_ii
             then
                 nextstate <= hint;
             else
