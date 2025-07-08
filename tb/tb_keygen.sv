@@ -5,7 +5,7 @@ module tb_keygen;
     localparam SEC_LEVEL = 2;
     localparam MODE = 0;
     localparam NUM_TV = 1;
-    localparam HIGH_PERF = 0;
+    localparam HIGH_PERF = 1;
     localparam W = (HIGH_PERF) ? 64 : 32;
 
     logic tb_rst;
@@ -143,16 +143,17 @@ module tb_keygen;
                 end
                 S_Z: begin
                     valid_i <= 1;
-                    data_i <= seed[c][ctr*W +: W];
+                    data_i  <= seed[c][0 +: W];
                 
                     if (ready_i) begin
                         ctr <= ctr + 1;
+                        data_i <= seed[c][(ctr+1)*W +: W];
 
                         if (ctr == SEED_WORDS_NUM - 1) begin
                             ctr <= 0;
                             state <= S_RHO;
                         end
-                    end 
+                    end
                 end
                 S_RHO: begin
                     ready_o <= 1;
