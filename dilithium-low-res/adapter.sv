@@ -100,14 +100,14 @@ module adapter_low_res (
                     op_in = KEYGEN_OPCODE;
                     op_valid_in = 1;
                 end
-                next_state = ready_out ? KEYGEN_EXECUTE: KEYGEN_INGEST_SEED;
+                next_state = ready_out ? KEYGEN_EXECUTE : KEYGEN_INGEST_SEED;
             end
             KEYGEN_EXECUTE: begin
                 if (ready_out) begin
                     op_in = {DUMP_OPCODE, SK_SUB_OPCODE};
                     op_valid_in = 1;
                 end
-                next_state = ready_out ? KEYGEN_DUMP_SK: KEYGEN_EXECUTE;
+                next_state = ready_out ? KEYGEN_DUMP_SK : KEYGEN_EXECUTE;
             end
             KEYGEN_DUMP_SK: begin
                 if (ready_out) begin

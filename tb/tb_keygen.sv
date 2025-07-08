@@ -1,42 +1,13 @@
 `timescale 1ns / 1ps
 
 module tb_keygen;
-    localparam P = 10;
-    localparam SEC_LEVEL = 2;
+    localparam HIGH_PERF = 0;
+    localparam SEC_LEVEL = 5;
     localparam MODE = 0;
     localparam NUM_TV = 1;
-    localparam HIGH_PERF = 1;
+
+    localparam P = 10;
     localparam W = (HIGH_PERF) ? 64 : 32;
-
-    logic tb_rst;
-    logic [1:0] mode = MODE;
-    logic rst, start, done;
-    logic clk = 1;
-    logic [9:0] ctr, c;
-    integer start_time;
-      
-    logic valid_i,  ready_o;
-    logic ready_i, valid_o;
-    logic  [W-1:0] data_i;  
-    logic [W-1:0] data_o;
-    
-    dilithium #(
-        .HIGH_PERF(HIGH_PERF),
-        .SEC_LEVEL(SEC_LEVEL)
-    )
-    dut (
-        .clk (clk),
-        .rst (rst),
-        .start (start),
-        .mode (mode),
-        .valid_i (valid_i),
-        .ready_i (ready_i),
-        .data_i (data_i),
-        .valid_o (valid_o),
-        .ready_o (ready_o),
-        .data_o (data_o)
-    );
-
     localparam S1_SIZE = (SEC_LEVEL == 2) ? 3072
                         : (SEC_LEVEL == 3 ? 5120 : 5376);
     localparam S2_SIZE = (SEC_LEVEL == 2) ? 3072
@@ -60,14 +31,44 @@ module tb_keygen;
     logic [0:S2_SIZE-1] s2    [NUM_TV-1:0];
     logic [0:T0_SIZE-1] t0    [NUM_TV-1:0];
     logic [0:T1_SIZE-1] t1    [NUM_TV-1:0];
+
+    logic tb_rst;
+    logic [9:0] ctr, c;
+    integer start_time, dump_time;
+    logic low_res_sk_done;
+
+    logic clk = 1;
+    logic [1:0] mode = MODE;
+    logic rst, start, done;
+    logic valid_i,  ready_o;
+    logic ready_i, valid_o;
+    logic  [W-1:0] data_i;  
+    logic [W-1:0] data_o;
   
+    // NOTE: different Dilithiums will have different transitions
     typedef enum logic [3:0] {
         S_INIT, S_START, S_Z, S_RHO, S_K,
-        S_S1, S_S2, S_T1, S_T0, S_TR,
-        S_STALL, S_STOP
+        S_S1, S_S2, S_T1, S_T0, S_TR, S_STOP
     } state_t;
+    state_t state;
 
-    state_t state;   
+
+    dilithium #(
+        .HIGH_PERF(HIGH_PERF),
+        .SEC_LEVEL(SEC_LEVEL)
+    )
+    dut (
+        .clk (clk),
+        .rst (rst),
+        .start (start),
+        .mode (mode),
+        .valid_i (valid_i),
+        .ready_i (ready_i),
+        .data_i (data_i),
+        .valid_o (valid_o),
+        .ready_o (ready_o),
+        .data_o (data_o)
+    );
   
     initial begin
         $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/seed.txt",  seed);
@@ -109,14 +110,15 @@ module tb_keygen;
     // TODO: revise this
     always_ff @(posedge clk) begin
         if (tb_rst) begin
-            valid_i <= 0;
-            ready_o <= 0;
-            data_i  <= 0;
-            ctr     <= 0; 
-            c       <= 0;
-            start   <= 0;
-            rst     <= 1;
-            state   <= S_INIT;
+            valid_i         <= 0;
+            ready_o         <= 0;
+            data_i          <= 0;
+            ctr             <= 0; 
+            c               <= 0;
+            start           <= 0;
+            low_res_sk_done <= 0;
+            rst             <= 1;
+            state           <= S_INIT;
         end
 
         else begin
@@ -128,7 +130,6 @@ module tb_keygen;
         
             unique case (state)
                 S_INIT: begin
-                    start_time <= $time;
                     rst <= 1;
                     ctr <= ctr + 1;
                     // Arbitrary number of reset cycles
@@ -138,6 +139,7 @@ module tb_keygen;
                     end
                 end
                 S_START: begin
+                    start_time <= $time;
                     start <= 1;
                     state <= S_Z;
                 end
@@ -158,6 +160,10 @@ module tb_keygen;
                 S_RHO: begin
                     ready_o <= 1;
                     if (valid_o) begin
+                        // Since low-res dilithium dumps the data as a separate operation
+                        // it is usful to keep track of both also separately
+                        dump_time  <= $time;
+
                         if (data_o !== rho[c][ctr*W+:W])
                             $display("[Rho, %d] Error: Expected %h, received %h", ctr, rho[c][ctr*W+:W], data_o); 
                     
@@ -165,7 +171,8 @@ module tb_keygen;
                         
                         if (ctr == SEED_WORDS_NUM-1) begin
                             ctr <= 0;
-                            state <= S_K;
+                            state <= low_res_sk_done ? S_T1 : S_K;
+                            low_res_sk_done <= !(HIGH_PERF);
                         end
                     end
                 end        
@@ -179,7 +186,7 @@ module tb_keygen;
                         
                         if (ctr == SEED_WORDS_NUM-1) begin
                             ctr <= 0;
-                            state <= S_S1;
+                            state <= HIGH_PERF ? S_S1 : S_TR;
                         end
                     end
                 end
@@ -207,7 +214,7 @@ module tb_keygen;
                         
                         if (ctr == S2_WORDS_NUM-1) begin
                             ctr <= 0;
-                            state <= S_T1;
+                            state <= HIGH_PERF ? S_T1 : S_T0; // S_STOP
                         end
                     end
                 end
@@ -221,7 +228,7 @@ module tb_keygen;
                         
                         if (ctr == T1_WORDS_NUM-1) begin
                             ctr <= 0;
-                            state <= S_T0;
+                            state <= HIGH_PERF ? S_T0 : S_STOP;
                         end
                     end
                 end
@@ -234,7 +241,7 @@ module tb_keygen;
                         
                         if (ctr == T0_WORDS_NUM-1) begin
                             ctr <= 0;
-                            state <= S_TR;
+                            state <= HIGH_PERF ? S_TR : S_RHO;
                         end
                     end
                 end
@@ -248,7 +255,7 @@ module tb_keygen;
                         
                         if (ctr == SEED_WORDS_NUM-1) begin
                             ctr <= 0;
-                            state <= S_STOP;
+                            state <= HIGH_PERF ? S_STOP : S_S1;
                         end
                     end
                 end
@@ -257,7 +264,14 @@ module tb_keygen;
                     c       <= c + 1;
                     state   <= S_INIT;
 
-                    $display("KG[%d] completed in %d clock cycles", c, ($time-start_time)/P);
+                    if (HIGH_PERF) begin
+                        $display("KG%d[%d] completed in %d clock cycles", SEC_LEVEL, c, ($time-start_time)/P);
+                    end else begin
+                        $display(
+                            "KG%d[%d] completed in %d (exec) + %d (dump) = %d (total) clock cycles",
+                            SEC_LEVEL, c, (dump_time-start_time)/P, ($time-dump_time)/P, ($time-start_time)/P
+                        );
+                    end
 
                     if (c == NUM_TV-1) begin
                         c <= 0;
