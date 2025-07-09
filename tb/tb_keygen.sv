@@ -8,6 +8,7 @@ module tb_keygen;
 
     localparam P = 10;
     localparam W = (HIGH_PERF) ? 64 : 32;
+
     localparam S1_SIZE = (SEC_LEVEL == 2) ? 3072
                         : (SEC_LEVEL == 3 ? 5120 : 5376);
     localparam S2_SIZE = (SEC_LEVEL == 2) ? 3072
@@ -71,14 +72,14 @@ module tb_keygen;
     );
   
     initial begin
-        $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/seed.txt",  seed);
+        $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/shared/seed.txt", seed);
+        $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/shared/k.txt", k);
+        $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/shared/rho.txt", rho);
         if (SEC_LEVEL == 2) begin
             $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/s1_2.txt",  s1);
             $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/s2_2.txt",  s2);
             $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/t0_2.txt",   t0);
             $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/t1_2.txt",  t1);
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/k_2.txt",   k);
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/rho_2.txt", rho);
             $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/tr_2.txt",  tr);
         end
         else if (SEC_LEVEL == 3) begin
@@ -86,8 +87,6 @@ module tb_keygen;
             $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/s2_3.txt",  s2);
             $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/t0_3.txt",   t0);
             $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/t1_3.txt",  t1);
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/k_3.txt",   k);
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/rho_3.txt", rho);
             $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/tr_3.txt",  tr);
         end
         else begin
@@ -95,8 +94,6 @@ module tb_keygen;
             $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/s2_5.txt",  s2);
             $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/t0_5.txt",   t0);
             $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/t1_5.txt",  t1);
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/k_5.txt",   k);
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/rho_5.txt", rho);
             $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/tr_5.txt",  tr);
         end
     end
@@ -107,7 +104,6 @@ module tb_keygen;
         tb_rst = 0;
     end
 
-    // TODO: revise this
     always_ff @(posedge clk) begin
         if (tb_rst) begin
             valid_i         <= 0;
@@ -274,7 +270,6 @@ module tb_keygen;
                     end
 
                     if (c == NUM_TV-1) begin
-                        c <= 0;
                         $display ("Testbench done!");
                         $finish;
                     end

@@ -40,6 +40,10 @@ module adapter_low_res (
 
     localparam logic[3:0] KEYGEN_OPCODE = 4'b0111;
 
+    localparam logic[3:0] PRE_VERIFY_OPCODE = 4'b0101;
+    localparam logic[3:0] DIGEST_OPCODE = 4'b0001;
+    localparam logic[3:0] VERIFY_OPCODE = 4'b0100;
+
 
     // constant PAYLOAD_TYPE_PK   : std_logic_vector(1 downto 0) := "00";
     // constant PAYLOAD_TYPE_SK   : std_logic_vector(1 downto 0) := "01";
@@ -60,10 +64,17 @@ module adapter_low_res (
     // FSM states
     typedef enum logic [5:0] {
         IDLE,
+        // Keygen states
         KEYGEN_INGEST_SEED,
         KEYGEN_EXECUTE,
         KEYGEN_DUMP_SK,
-        KEYGEN_DUMP_PK
+        KEYGEN_DUMP_PK,
+        // Verify states
+        VERIFY_INGEST_PK,
+        VERIFY_PREPROCESS,
+        VERIFY_INGEST_MSG,
+        VERIFY_EXECUTE,
+        VERIFY_RESULT
     } state_t;
     state_t current_state, next_state;
 
@@ -91,7 +102,42 @@ module adapter_low_res (
                         op_valid_in = 1;
                         next_state = KEYGEN_INGEST_SEED;
                     end
+                    if (mode == SIGN_MODE) begin
+                        op_in = {INGEST_OPCODE, PK_SUB_OPCODE};
+                        op_valid_in = 1;
+                        next_state = VERIFY_INGEST_PK;
+                    end
                 end
+            end
+
+            // Verify states
+            VERIFY_INGEST_PK: begin
+                next_state = VERIFY_INGEST_PK;
+                if (ready_out) begin
+                    op_in = PRE_VERIFY_OPCODE;
+                    op_valid_in = 1;
+                    next_state = VERIFY_PREPROCESS;
+                end
+            end
+            VERIFY_PREPROCESS: begin
+                next_state = VERIFY_PREPROCESS;
+                if (ready_out) begin
+                    op_in = DIGEST_OPCODE;
+                    op_valid_in = 1;
+                    next_state = VERIFY_INGEST_MSG;
+                end
+            end
+            VERIFY_INGEST_MSG: begin
+                next_state = VERIFY_INGEST_MSG;
+                if (ready_out) begin
+                    op_in = VERIFY_OPCODE;
+                    op_valid_in = 1;
+                    next_state = VERIFY_EXECUTE;
+                end
+            end
+            VERIFY_EXECUTE: begin
+                next_state = ready_out ? IDLE : VERIFY_EXECUTE;
+                done = ready_out;
             end
 
             // Keygen states

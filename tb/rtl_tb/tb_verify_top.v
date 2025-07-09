@@ -93,25 +93,25 @@ module tb_verify_top;
     reg [0:35840-1]      z_5  [NUM_TV-1:0];
     
   initial begin
-    $readmemh("zs_2.txt",   z_2);
-    $readmemh("rho_2.txt",  rho_2);
-    $readmemh("t1_2.txt",   t1_2);
-    $readmemh("m_2.txt",    m_2);
-    $readmemh("mlen_2.txt", mlen_2);
-    $readmemh("c_2.txt",    c_2);
-    $readmemh("h_2.txt",    h_2);
+    $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/z_2.txt",   z_2);
+    $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/rho.txt",  rho_2);
+    $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/t1_2.txt",   t1_2);
+    $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/msg.txt",    m_2);
+    $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/msg_len.txt", mlen_2);
+    $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/c_2.txt",    c_2);
+    $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/h_2.txt",    h_2);
     
-    $readmemh("zs_3.txt",   z_3);
-    $readmemh("rho_3.txt",  rho_3);
-    $readmemh("t1_3.txt",   t1_3);
-    $readmemh("c_3.txt",    c_3);
-    $readmemh("h_3.txt",    h_3);
+    $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/z_3.txt",   z_3);
+    $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/rho.txt",  rho_3);
+    $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/t1_3.txt",   t1_3);
+    $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/c_3.txt",    c_3);
+    $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/h_3.txt",    h_3);
     
-    $readmemh("zs_5.txt",   z_5);
-    $readmemh("rho_5.txt",  rho_5);
-    $readmemh("t1_5.txt",   t1_5);
-    $readmemh("c_5.txt",    c_5);
-    $readmemh("h_5.txt",    h_5);
+    $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/z_5.txt",   z_5);
+    $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/rho.txt",  rho_5);
+    $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/t1_5.txt",   t1_5);
+    $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/c_5.txt",    c_5);
+    $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/h_5.txt",    h_5);
     
     c = 0;
     ctr   = 0;
