@@ -469,7 +469,7 @@ begin
             
             if rcntq.max = '1' and d.valid = '1'
             then
-                q.ready_rcv <= '0';
+                -- q.ready_rcv <= '0';
                 case d.payload_type is
                     when PAYLOAD_TYPE_PK => nextstate <= s_t1;
                     when PAYLOAD_TYPE_SK => nextstate <= s_k; rcntd.rst <= '1';
@@ -514,7 +514,7 @@ begin
         -- store t1
         -----------------------------------------------------------------------------
         when s_t1 =>
-            q.ready_rcv <= d.fifo160q.ready_rcv and not d.fifo160q.toggle;
+            q.ready_rcv <= d.fifo160q.ready_rcv; -- and not d.fifo160q.toggle;
             q.fifo160d.valid <= d.valid;
             q.fifo160d.ready_rcv <= '1';
             memcntd.en <= d.fifo160q.valid;
@@ -650,7 +650,7 @@ begin
             
             if rcntq.max = '1'
             then
-                q.ready_rcv <= '0';
+                -- q.ready_rcv <= '0';
                 nextstate <= s_z;
             end if;
         
@@ -684,12 +684,13 @@ begin
         -- unpack h
         -----------------------------------------------------------------------------
         when s_h_rcv => 
-            q.ready_rcv <= '1';
-            hbuf_en <= d.valid;
+            -- q.ready_rcv <= '1';
+            -- hbuf_en <= d.valid;
             
             if d.valid = '1'
             then
-                q.ready_rcv <= '0';
+                hbuf_en <= '1';
+                q.ready_rcv <= '1';
                 nextstate <= s_h;
             end if;
         
@@ -713,12 +714,13 @@ begin
             end if; 
         
         when s_h_poly_rcv =>
-            q.ready_rcv <= '1';
-            hbuf_en <= d.valid;
+            -- q.ready_rcv <= '1';
+            -- hbuf_en <= d.valid;
             
             if d.valid = '1'
             then
-                q.ready_rcv <= '0';
+                hbuf_en <= '1';
+                q.ready_rcv <= '1';
                 nextstate <= s_h_poly;
             end if;
         
