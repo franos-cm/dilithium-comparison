@@ -112,7 +112,6 @@ module tb_verify;
             ctr             <= 0; 
             tv_ctr          <= 0;
             start           <= 0;
-            low_res_sk_done <= 0;
             rst             <= 1;
             state           <= S_INIT;
         end
@@ -145,9 +144,9 @@ module tb_verify;
                 
                     if (ready_i) begin
                         if (ctr == RHO_WORDS_NUM-1) begin
-                            state  <= LOAD_C;
                             ctr    <= 0;
-                            data_i <= c[tv_ctr][0 +: W];
+                            state  <= HIGH_PERF ? LOAD_C : LOAD_T1;
+                            data_i <= HIGH_PERF ? c[tv_ctr][0 +: W] : t1[tv_ctr][0 +: W];
                         end else begin
                             ctr    <= ctr + 1;
                             data_i <= rho[tv_ctr][(ctr+1)*W +: W];
@@ -160,8 +159,8 @@ module tb_verify;
                 
                     if (ready_i) begin
                         if (ctr == RHO_WORDS_NUM-1) begin
-                            state  <= LOAD_Z;
                             ctr    <= 0;
+                            state  <= LOAD_Z;
                             data_i <= z[tv_ctr][0 +: W];
                         end else begin
                             ctr    <= ctr + 1;
@@ -175,9 +174,9 @@ module tb_verify;
                 
                     if (ready_i) begin
                         if (ctr == Z_WORDS_NUM-1) begin
-                            state  <= LOAD_T1;
                             ctr    <= 0;
-                            data_i <= t1[tv_ctr][0 +: W];
+                            state  <= HIGH_PERF ? LOAD_T1 : LOAD_H;
+                            data_i <= HIGH_PERF ? t1[tv_ctr][0 +: W] : h[tv_ctr][0 +: W];
                         end else begin
                             ctr    <= ctr + 1;
                             data_i <= z[tv_ctr][(ctr+1)*W +: W];
@@ -190,9 +189,9 @@ module tb_verify;
                 
                     if (ready_i) begin
                         if (ctr == T1_WORDS_NUM-1) begin
-                            state  <= LOAD_MLEN;
                             ctr    <= 0;
-                            data_i <= msg_len[tv_ctr];
+                            state  <= HIGH_PERF ? LOAD_MLEN : LOAD_C;
+                            data_i <= HIGH_PERF ? msg_len[tv_ctr] : c[tv_ctr][0 +: W];
                         end else begin
                             ctr    <= ctr + 1;
                             data_i <= t1[tv_ctr][(ctr+1)*W +: W];
@@ -204,8 +203,8 @@ module tb_verify;
                     data_i <= msg_len[tv_ctr];
                 
                     if (ready_i) begin
-                        state  <= LOAD_MSG;
                         ctr    <= 0;
+                        state  <= LOAD_MSG;
                         data_i <= msg[tv_ctr][0 +: W];
                     end
                 end
@@ -215,9 +214,10 @@ module tb_verify;
                 
                     if (ready_i) begin
                         if ((ctr+1)*W >= msg_len[tv_ctr]*8) begin
-                            state  <= LOAD_H;
-                            ctr    <= 0;
-                            data_i <= h[tv_ctr][0 +: W];
+                            ctr     <= 0;
+                            state   <= HIGH_PERF ? LOAD_H : UNLOAD_RESULT;
+                            data_i  <= h[tv_ctr][0 +: W];
+                            valid_i <= HIGH_PERF ? 1 : 0;
                         end else begin
                             ctr    <= ctr + 1;
                             data_i <= msg[tv_ctr][(ctr+1)*W +: W];
@@ -230,8 +230,10 @@ module tb_verify;
                 
                     if (ready_i) begin
                         if (ctr == H_WORDS_NUM-1) begin
-                            state  <= UNLOAD_RESULT;
                             ctr    <= 0;
+                            state  <= HIGH_PERF ? UNLOAD_RESULT : LOAD_MLEN;
+                            data_i <= msg_len[tv_ctr];
+                            valid_i <= HIGH_PERF ? 0 : 1;
                         end else begin
                             ctr    <= ctr + 1;
                             data_i <= h[tv_ctr][(ctr+1)*W +: W];
@@ -244,11 +246,11 @@ module tb_verify;
                         if (data_o == 1) begin
                             $display("Rejected");
                         end
-                        state <= S_STOP;
+                        ready_o <= 0;
+                        state   <= S_STOP;
                     end
                 end
                 S_STOP: begin
-                    ready_o <= 1;
                     tv_ctr  <= tv_ctr + 1;
                     state   <= S_INIT;
                     ctr     <= 0;

@@ -29,7 +29,6 @@ module dilithium #(
 
     edge_detector start_detector (
         .clk  (clk),
-        .rst  (rst),
         .signal_in(start),
         .rising_edge(start_strobe)
     );
