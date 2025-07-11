@@ -229,7 +229,7 @@ module adapter_low_res (
                     op_in = {DUMP_OPCODE, PK_SUB_OPCODE};
                     op_valid_in = 1;
                 end
-                next_state = ready_out ? KEYGEN_DUMP_PK: KEYGEN_DUMP_SK;
+                next_state = ready_out ? KEYGEN_DUMP_PK : KEYGEN_DUMP_SK;
             end
             KEYGEN_DUMP_PK: begin
                 next_state = ready_out ? IDLE : KEYGEN_DUMP_PK;

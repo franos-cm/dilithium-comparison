@@ -6,9 +6,13 @@ module tb_keygen;
     localparam logic[1:0] MODE = KEYGEN_MODE;
 
     logic tb_rst;
-    logic [9:0] ctr, c;
-    integer start_time, dump_time;
-    logic low_res_sk_done;
+    logic [9:0] ctr, tv_ctr;
+    // Since dilithium-low-res loads/dumps the data as separate
+    // operations, it is useful to keep track of both also separately.
+    // These counters are thus only valid for dilithium-low-res.
+    integer start_time, exec_time, unload_time, stop_time;
+    integer load_cycles, exec_cycles, unload_cycles, total_cycles;
+    logic unload_time_started;
 
     logic clk = 1;
     logic rst, start, done;
@@ -26,10 +30,11 @@ module tb_keygen;
     logic [0:T0_SIZE-1]   t0    [NUM_TV-1:0];
     logic [0:T1_SIZE-1]   t1    [NUM_TV-1:0];
   
-    // NOTE: different Dilithiums will have different transitions
+    // NOTE: different Dilithiums will have same states, but different transitions
+    logic low_res_sk_done;
     typedef enum logic [3:0] {
-        S_INIT, S_START, S_Z, S_RHO, S_K,
-        S_S1, S_S2, S_T1, S_T0, S_TR, S_STOP
+        S_INIT, S_START, LOAD_SEED, UNLOAD_RHO, UNLOAD_K, UNLOAD_S1,
+        UNLOAD_S2, UNLOAD_T1, UNLOAD_T0, UNLOAD_TR, S_STOP
     } state_t;
     state_t state;
 
@@ -71,15 +76,16 @@ module tb_keygen;
 
     always_ff @(posedge clk) begin
         if (tb_rst) begin
-            valid_i         <= 0;
-            ready_o         <= 0;
-            data_i          <= 0;
-            ctr             <= 0; 
-            c               <= 0;
-            start           <= 0;
-            low_res_sk_done <= 0;
-            rst             <= 1;
-            state           <= S_INIT;
+            valid_i             <= 0;
+            ready_o             <= 0;
+            data_i              <= 0;
+            ctr                 <= 0; 
+            tv_ctr              <= 0;
+            start               <= 0;
+            unload_time_started <= 0;
+            rst                 <= 1;
+            low_res_sk_done     <= 0;
+            state               <= S_INIT;
         end
 
         else begin
@@ -100,141 +106,153 @@ module tb_keygen;
                     end
                 end
                 S_START: begin
-                    start_time <= $time;
+                    start_time = $time;
                     start <= 1;
-                    state <= S_Z;
+                    state <= LOAD_SEED;
                 end
-                S_Z: begin
+                LOAD_SEED: begin
                     valid_i <= 1;
-                    data_i  <= seed[c][0 +: W];
+                    data_i  <= seed[tv_ctr][0 +: W];
                 
                     if (ready_i) begin
                         ctr <= ctr + 1;
-                        data_i <= seed[c][(ctr+1)*W +: W];
+                        data_i <= seed[tv_ctr][(ctr+1)*W +: W];
 
-                        if (ctr == SEED_WORDS_NUM - 1) begin
+                        if (ctr == SEED_WORDS_NUM-1) begin
                             ctr <= 0;
-                            state <= S_RHO;
+                            ready_o <= 1;
+                            valid_i <= 0;
+                            data_i  <= 0;
+                            exec_time = $time;
+                            state <= UNLOAD_RHO;
                         end
                     end
                 end
-                S_RHO: begin
+                UNLOAD_RHO: begin
                     ready_o <= 1;
                     if (valid_o) begin
-                        // Since low-res dilithium dumps the data as a separate operation
-                        // it is usful to keep track of both also separately
-                        dump_time  <= $time;
-
-                        if (data_o !== rho[c][ctr*W+:W])
-                            $display("[Rho, %d] Error: Expected %h, received %h", ctr, rho[c][ctr*W+:W], data_o); 
+                        if (!unload_time_started) begin
+                            unload_time = $time;
+                            unload_time_started <= 1;
+                        end
+                        
+                        if (data_o !== rho[tv_ctr][ctr*W+:W])
+                            $display("[Rho, %d] Error: Expected %h, received %h", ctr, rho[tv_ctr][ctr*W+:W], data_o); 
                     
                         ctr <= ctr + 1;
                         
                         if (ctr == SEED_WORDS_NUM-1) begin
                             ctr <= 0;
-                            state <= low_res_sk_done ? S_T1 : S_K;
+                            state <= low_res_sk_done ? UNLOAD_T1 : UNLOAD_K;
                             low_res_sk_done <= !(HIGH_PERF);
                         end
                     end
                 end        
-                S_K: begin
+                UNLOAD_K: begin
                     ready_o <= 1;
                     if (valid_o) begin
-                        if (data_o !== k[c][ctr*W+:W])
-                            $display("[K, %d] Error: Expected %h, received %h", ctr, k[c][ctr*W+:W], data_o); 
+                        if (data_o !== k[tv_ctr][ctr*W+:W])
+                            $display("[K, %d] Error: Expected %h, received %h", ctr, k[tv_ctr][ctr*W+:W], data_o); 
                     
                         ctr <= ctr + 1;
                         
                         if (ctr == SEED_WORDS_NUM-1) begin
                             ctr <= 0;
-                            state <= HIGH_PERF ? S_S1 : S_TR;
+                            state <= HIGH_PERF ? UNLOAD_S1 : UNLOAD_TR;
                         end
                     end
                 end
-                S_S1: begin
+                UNLOAD_S1: begin
                     ready_o <= 1;
                     if (valid_o) begin
-                        if (data_o !== s1[c][ctr*W+:W])
-                            $display("[S1, %d] Error: Expected %h, received %h", ctr, s1[c][ctr*W+:W], data_o); 
+                        if (data_o !== s1[tv_ctr][ctr*W+:W])
+                            $display("[S1, %d] Error: Expected %h, received %h", ctr, s1[tv_ctr][ctr*W+:W], data_o); 
         
                         ctr <= ctr + 1;
                         
                         if (ctr == S1_WORDS_NUM-1) begin
                             ctr <= 0;
-                            state <= S_S2;
+                            state <= UNLOAD_S2;
                         end
                     end
                 end
-                S_S2: begin
+                UNLOAD_S2: begin
                     ready_o <= 1;
                     if (valid_o) begin
-                        if (data_o !== s2[c][ctr*W+:W])
-                            $display("[S2, %d] Error: Expected %h, received %h", ctr, s2[c][ctr*W+:W], data_o); 
+                        if (data_o !== s2[tv_ctr][ctr*W+:W])
+                            $display("[S2, %d] Error: Expected %h, received %h", ctr, s2[tv_ctr][ctr*W+:W], data_o); 
                     
                         ctr <= ctr + 1;
                         
                         if (ctr == S2_WORDS_NUM-1) begin
                             ctr <= 0;
-                            state <= HIGH_PERF ? S_T1 : S_T0; // S_STOP
+                            state <= HIGH_PERF ? UNLOAD_T1 : UNLOAD_T0;
                         end
                     end
                 end
-                S_T1: begin
+                UNLOAD_T1: begin
                     ready_o <= 1;
                     if (valid_o) begin
-                        if (data_o !== t1[c][ctr*W+:W])
-                            $display("[T1, %d] Error: Expected %h, received %h", ctr, t1[c][ctr*W+:W], data_o); 
+                        if (data_o !== t1[tv_ctr][ctr*W+:W])
+                            $display("[T1, %d] Error: Expected %h, received %h", ctr, t1[tv_ctr][ctr*W+:W], data_o); 
 
                         ctr <= ctr + 1;
                         
                         if (ctr == T1_WORDS_NUM-1) begin
                             ctr <= 0;
-                            state <= HIGH_PERF ? S_T0 : S_STOP;
+                            state <= HIGH_PERF ? UNLOAD_T0 : S_STOP;
+                            stop_time = $time;
                         end
                     end
                 end
-                S_T0: begin
+                UNLOAD_T0: begin
                     ready_o <= 1;
                     if (valid_o) begin
-                        if (data_o !== t0[c][ctr*W+:W])
-                            $display("[T0, %d] Error: Expected %h, received %h", ctr, t0[c][ctr*W+:W], data_o); 
+                        if (data_o !== t0[tv_ctr][ctr*W+:W])
+                            $display("[T0, %d] Error: Expected %h, received %h", ctr, t0[tv_ctr][ctr*W+:W], data_o); 
                         ctr <= ctr + 1;
                         
                         if (ctr == T0_WORDS_NUM-1) begin
                             ctr <= 0;
-                            state <= HIGH_PERF ? S_TR : S_RHO;
+                            state <= HIGH_PERF ? UNLOAD_TR : UNLOAD_RHO;
                         end
                     end
                 end
-                S_TR: begin
+                UNLOAD_TR: begin
                     ready_o <= 1;
                     if (valid_o) begin
-                        if (data_o !== tr[c][ctr*W+:W])
-                            $display("[TR, %d] Error: Expected %h, received %h", ctr, tr[c][ctr*W+:W], data_o); 
+                        if (data_o !== tr[tv_ctr][ctr*W+:W])
+                            $display("[TR, %d] Error: Expected %h, received %h", ctr, tr[tv_ctr][ctr*W+:W], data_o); 
                     
                         ctr <= ctr + 1;
                         
                         if (ctr == SEED_WORDS_NUM-1) begin
                             ctr <= 0;
-                            state <= HIGH_PERF ? S_STOP : S_S1;
+                            state <= HIGH_PERF ? S_STOP : UNLOAD_S1;
                         end
                     end
                 end
                 S_STOP: begin
-                    ready_o <= 1;
-                    c       <= c + 1;
-                    state   <= S_INIT;
+                    tv_ctr              <= tv_ctr + 1;
+                    low_res_sk_done     <= 0;
+                    unload_time_started <= 0;
+                    state               <= S_INIT;
 
                     if (HIGH_PERF) begin
-                        $display("KG%d[%d] completed in %d clock cycles", SEC_LEVEL, c, ($time-start_time)/P);
+                        $display("KG%d[%d] completed in %d clock cycles", SEC_LEVEL, tv_ctr, ($time-start_time)/P);
                     end else begin
+                        load_cycles = (exec_time-start_time)/P;
+                        exec_cycles = (unload_time-exec_time)/P;
+                        unload_cycles = (stop_time-unload_time)/P;
+                        total_cycles = (stop_time-start_time)/P;
+
                         $display(
-                            "KG%d[%d] completed in %d (exec) + %d (dump) = %d (total) clock cycles",
-                            SEC_LEVEL, c, (dump_time-start_time)/P, ($time-dump_time)/P, ($time-start_time)/P
+                            "KG%d[%d] completed in %d (load) + %d (exec) + %d (unload) = %d (total) clock cycles",
+                            SEC_LEVEL, tv_ctr, load_cycles, exec_cycles, unload_cycles, total_cycles
                         );
                     end
 
-                    if (c == NUM_TV-1) begin
+                    if (tv_ctr == NUM_TV-1) begin
                         $display ("Testbench done!");
                         $finish;
                     end

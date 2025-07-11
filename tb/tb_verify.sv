@@ -7,8 +7,11 @@ module tb_verify;
 
     logic tb_rst;
     logic [9:0] ctr, tv_ctr;
-    integer start_time, dump_time;
-    logic low_res_sk_done;
+    // Since dilithium-low-res loads/dumps the data as separate
+    // operations, it is useful to keep track of both also separately.
+    // These counters are thus only valid for dilithium-low-res.
+    integer start_time, load_sig_time, load_msg_time, exec_time, stop_time;
+    integer load_pk_cycles, load_sig_cycles, load_msg_cycles, exec_cycles, total_cycles;
 
     logic clk = 1;
     logic rst, start, done;
@@ -25,7 +28,7 @@ module tb_verify;
     logic [0:H_SIZE-1]     h        [NUM_TV-1:0];
     logic [0:T1_SIZE-1]    t1       [NUM_TV-1:0];
   
-    // NOTE: different Dilithiums will have different transitions
+    // NOTE: different Dilithiums will have same states, but different transitions
     typedef enum logic [3:0] {
         S_INIT, S_START, LOAD_RHO, LOAD_C, LOAD_Z, LOAD_T1,
         LOAD_MLEN, LOAD_MSG, LOAD_H, UNLOAD_RESULT, S_STOP
@@ -97,7 +100,7 @@ module tb_verify;
                     end
                 end
                 S_START: begin
-                    start_time <= $time;
+                    start_time = $time;
                     start <= 1;
                     state <= LOAD_RHO;
                 end
@@ -155,6 +158,7 @@ module tb_verify;
                             ctr    <= 0;
                             state  <= HIGH_PERF ? LOAD_MLEN : LOAD_C;
                             data_i <= HIGH_PERF ? msg_len[tv_ctr] : c[tv_ctr][0 +: W];
+                            load_sig_time = $time;
                         end else begin
                             ctr    <= ctr + 1;
                             data_i <= t1[tv_ctr][(ctr+1)*W +: W];
@@ -166,9 +170,9 @@ module tb_verify;
                     data_i <= msg_len[tv_ctr];
                 
                     if (ready_i) begin
-                        ctr    <= 0;
-                        state  <= LOAD_MSG;
                         data_i <= msg[tv_ctr][0 +: W];
+                        state  <= LOAD_MSG;
+                        load_msg_time = $time;
                     end
                 end
                 LOAD_MSG: begin
@@ -181,6 +185,8 @@ module tb_verify;
                             state   <= HIGH_PERF ? LOAD_H : UNLOAD_RESULT;
                             data_i  <= h[tv_ctr][0 +: W];
                             valid_i <= HIGH_PERF ? 1 : 0;
+                            ready_o <= HIGH_PERF ? 0 : 1;
+                            exec_time = $time;
                         end else begin
                             ctr    <= ctr + 1;
                             data_i <= msg[tv_ctr][(ctr+1)*W +: W];
@@ -195,8 +201,9 @@ module tb_verify;
                         if (ctr == H_WORDS_NUM-1) begin
                             ctr    <= 0;
                             state  <= HIGH_PERF ? UNLOAD_RESULT : LOAD_MLEN;
-                            data_i <= msg_len[tv_ctr];
                             valid_i <= HIGH_PERF ? 0 : 1;
+                            ready_o <= HIGH_PERF ? 0 : 1;
+                            data_i <= msg_len[tv_ctr];
                         end else begin
                             ctr    <= ctr + 1;
                             data_i <= h[tv_ctr][(ctr+1)*W +: W];
@@ -211,14 +218,26 @@ module tb_verify;
                         end
                         ready_o <= 0;
                         state   <= S_STOP;
+                        stop_time = $time;
                     end
                 end
                 S_STOP: begin
                     tv_ctr  <= tv_ctr + 1;
                     state   <= S_INIT;
-                    ctr     <= 0;
+                    if (HIGH_PERF) begin
+                        $display("VY%d[%d] completed in %d clock cycles", SEC_LEVEL, c, ($time-start_time)/P);
+                    end else begin
+                        load_pk_cycles = (load_sig_time-start_time)/P;
+                        load_sig_cycles = (load_msg_time-load_sig_time)/P;
+                        load_msg_cycles = (exec_time-load_msg_time)/P;
+                        exec_cycles = (stop_time-exec_time)/P;
+                        total_cycles = (stop_time-start_time)/P;
 
-                    $display("VY%d[%d] completed in %d clock cycles", SEC_LEVEL, tv_ctr, ($time-start_time)/10);
+                        $display(
+                            "VY%d[%d] completed in %d (load pk) + %d (load sig) + %d (load msg) + %d (exec) = %d (total) clock cycles",
+                            SEC_LEVEL, tv_ctr, load_pk_cycles, load_sig_cycles, load_msg_cycles, exec_cycles, total_cycles
+                        );
+                    end
 
                     if (tv_ctr == NUM_TV-1) begin
                         $display ("Testbench done!");
