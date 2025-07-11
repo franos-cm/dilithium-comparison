@@ -1,38 +1,9 @@
 `timescale 1ns / 1ps
 
+import tb_pkg::*;
+
 module tb_verify;
-    localparam integer HIGH_PERF = 1;
-    localparam integer SEC_LEVEL = 2;
-    localparam logic[1:0] MODE = 2'd1;
-    localparam integer NUM_TV = 5;
-
-    localparam integer P = 10;
-    localparam integer W = (HIGH_PERF) ? 64 : 32;
-
-    localparam MSG_SIZE = 3300*8; // Largest msg size from test vector
-    localparam MSG_LEN_SIZE = $clog2(MSG_SIZE);
-    localparam Z_SIZE = (SEC_LEVEL == 2) ? 18432
-                        : (SEC_LEVEL == 3 ? 25600 : 35840);
-    localparam H_SIZE = (SEC_LEVEL == 2) ? 672
-                        : (SEC_LEVEL == 3 ? 488 : 664);
-    localparam T1_SIZE = (SEC_LEVEL == 2) ? 10240
-                         : (SEC_LEVEL == 3 ? 15360 : 20480);
-    
-
-    // Ceil division for words
-    localparam Z_WORDS_NUM = (Z_SIZE + W - 1) / W;
-    localparam H_WORDS_NUM = (H_SIZE + W - 1) / W;
-    localparam T1_WORDS_NUM = (T1_SIZE + W - 1) / W;
-    localparam RHO_WORDS_NUM = (255 + W - 1) / W;
-  
-    logic [0:255] rho                [NUM_TV-1:0];
-    logic [0:255] c                  [NUM_TV-1:0];
-    logic [0:MSG_SIZE-1] msg         [NUM_TV-1:0];
-    logic [0:MSG_LEN_SIZE] msg_len   [NUM_TV-1:0];
-    logic [0:Z_SIZE-1] z             [NUM_TV-1:0];
-    logic [0:H_SIZE-1] h             [NUM_TV-1:0];
-    logic [0:T1_SIZE-1] t1           [NUM_TV-1:0];
-
+    localparam logic[1:0] MODE = VERIFY_MODE;
 
     logic tb_rst;
     logic [9:0] ctr, tv_ctr;
@@ -40,12 +11,19 @@ module tb_verify;
     logic low_res_sk_done;
 
     logic clk = 1;
-    logic [1:0] mode = MODE;
     logic rst, start, done;
     logic valid_i,  ready_o;
     logic ready_i, valid_o;
     logic  [W-1:0] data_i;  
     logic [W-1:0] data_o;
+
+    logic [0:SEED_SIZE-1]  rho      [NUM_TV-1:0];
+    logic [0:SEED_SIZE-1]  c        [NUM_TV-1:0];
+    logic [0:MSG_SIZE-1]   msg      [NUM_TV-1:0];
+    logic [0:MSG_LEN_SIZE] msg_len  [NUM_TV-1:0];
+    logic [0:Z_SIZE-1]     z        [NUM_TV-1:0];
+    logic [0:H_SIZE-1]     h        [NUM_TV-1:0];
+    logic [0:T1_SIZE-1]    t1       [NUM_TV-1:0];
   
     // NOTE: different Dilithiums will have different transitions
     typedef enum logic [3:0] {
@@ -63,7 +41,7 @@ module tb_verify;
         .clk (clk),
         .rst (rst),
         .start (start),
-        .mode (mode),
+        .mode (MODE),
         .valid_i (valid_i),
         .ready_i (ready_i),
         .data_i (data_i),
@@ -74,28 +52,13 @@ module tb_verify;
 
   
     initial begin
-        $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/shared/rho.txt", rho);
-        $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/shared/msg.txt", msg);
-        $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/shared/msg_len.txt", msg_len);
-    
-        if (SEC_LEVEL == 2) begin
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/t1_2.txt", t1);
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/c_2.txt", c);
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/z_2.txt", z);
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/h_2.txt", h);
-        end
-        else if (SEC_LEVEL == 3) begin
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/t1_3.txt", t1);
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/c_3.txt", c);
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/z_3.txt", z);
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/h_3.txt", h);
-        end
-        else begin
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/t1_5.txt", t1);
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/c_5.txt", c);
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/z_5.txt", z);
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/h_5.txt", h);
-        end
+        $readmemh({TV_SHARED_PATH, "rho.txt"}, rho);
+        $readmemh({TV_SHARED_PATH, "msg.txt"}, msg);
+        $readmemh({TV_SHARED_PATH, "msg_len.txt"}, msg_len);
+        $readmemh({TV_PATH, "t1.txt"}, t1);
+        $readmemh({TV_PATH, "c.txt"}, c);
+        $readmemh({TV_PATH, "z.txt"}, z);
+        $readmemh({TV_PATH, "h.txt"}, h);
     end
 
     initial begin
@@ -143,7 +106,7 @@ module tb_verify;
                     data_i <= rho[tv_ctr][ctr*W +: W];
                 
                     if (ready_i) begin
-                        if (ctr == RHO_WORDS_NUM-1) begin
+                        if (ctr == SEED_WORDS_NUM-1) begin
                             ctr    <= 0;
                             state  <= HIGH_PERF ? LOAD_C : LOAD_T1;
                             data_i <= HIGH_PERF ? c[tv_ctr][0 +: W] : t1[tv_ctr][0 +: W];
@@ -158,7 +121,7 @@ module tb_verify;
                     data_i <= c[tv_ctr][ctr*W +: W];
                 
                     if (ready_i) begin
-                        if (ctr == RHO_WORDS_NUM-1) begin
+                        if (ctr == SEED_WORDS_NUM-1) begin
                             ctr    <= 0;
                             state  <= LOAD_Z;
                             data_i <= z[tv_ctr][0 +: W];

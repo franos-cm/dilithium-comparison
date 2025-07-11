@@ -1,37 +1,9 @@
 `timescale 1ns / 1ps
 
+import tb_pkg::*;
+
 module tb_keygen;
-    localparam HIGH_PERF = 0;
-    localparam SEC_LEVEL = 5;
-    localparam MODE = 0;
-    localparam NUM_TV = 1;
-
-    localparam P = 10;
-    localparam W = (HIGH_PERF) ? 64 : 32;
-
-    localparam S1_SIZE = (SEC_LEVEL == 2) ? 3072
-                        : (SEC_LEVEL == 3 ? 5120 : 5376);
-    localparam S2_SIZE = (SEC_LEVEL == 2) ? 3072
-                        : (SEC_LEVEL == 3 ? 6144 : 6144);
-    localparam T0_SIZE = (SEC_LEVEL == 2) ? 13312
-                        : (SEC_LEVEL == 3 ? 19968 : 26624);
-    localparam T1_SIZE = (SEC_LEVEL == 2) ? 10240
-                        : (SEC_LEVEL == 3 ? 15360 : 20480);
-    // Ceil division for words
-    localparam S1_WORDS_NUM = (S1_SIZE + W - 1) / W;
-    localparam S2_WORDS_NUM = (S2_SIZE + W - 1) / W;
-    localparam T0_WORDS_NUM = (T0_SIZE + W - 1) / W;
-    localparam T1_WORDS_NUM = (T1_SIZE + W - 1) / W;
-    localparam SEED_WORDS_NUM = (256 + W - 1) / W;
-  
-    logic [0:255] seed        [NUM_TV-1:0];
-    logic [0:255] k           [NUM_TV-1:0];
-    logic [0:255] rho         [NUM_TV-1:0];
-    logic [0:255] tr          [NUM_TV-1:0];
-    logic [0:S1_SIZE-1] s1    [NUM_TV-1:0];
-    logic [0:S2_SIZE-1] s2    [NUM_TV-1:0];
-    logic [0:T0_SIZE-1] t0    [NUM_TV-1:0];
-    logic [0:T1_SIZE-1] t1    [NUM_TV-1:0];
+    localparam logic[1:0] MODE = KEYGEN_MODE;
 
     logic tb_rst;
     logic [9:0] ctr, c;
@@ -39,12 +11,20 @@ module tb_keygen;
     logic low_res_sk_done;
 
     logic clk = 1;
-    logic [1:0] mode = MODE;
     logic rst, start, done;
     logic valid_i,  ready_o;
     logic ready_i, valid_o;
     logic  [W-1:0] data_i;  
     logic [W-1:0] data_o;
+
+    logic [0:SEED_SIZE-1] seed  [NUM_TV-1:0];
+    logic [0:SEED_SIZE-1] k     [NUM_TV-1:0];
+    logic [0:SEED_SIZE-1] rho   [NUM_TV-1:0];
+    logic [0:SEED_SIZE-1] tr    [NUM_TV-1:0];
+    logic [0:S1_SIZE-1]   s1    [NUM_TV-1:0];
+    logic [0:S2_SIZE-1]   s2    [NUM_TV-1:0];
+    logic [0:T0_SIZE-1]   t0    [NUM_TV-1:0];
+    logic [0:T1_SIZE-1]   t1    [NUM_TV-1:0];
   
     // NOTE: different Dilithiums will have different transitions
     typedef enum logic [3:0] {
@@ -62,7 +42,7 @@ module tb_keygen;
         .clk (clk),
         .rst (rst),
         .start (start),
-        .mode (mode),
+        .mode (MODE),
         .valid_i (valid_i),
         .ready_i (ready_i),
         .data_i (data_i),
@@ -70,32 +50,17 @@ module tb_keygen;
         .ready_o (ready_o),
         .data_o (data_o)
     );
-  
+
+
     initial begin
-        $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/shared/seed.txt", seed);
-        $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/shared/k.txt", k);
-        $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/shared/rho.txt", rho);
-        if (SEC_LEVEL == 2) begin
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/s1_2.txt",  s1);
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/s2_2.txt",  s2);
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/t0_2.txt",   t0);
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/t1_2.txt",  t1);
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/tr_2.txt",  tr);
-        end
-        else if (SEC_LEVEL == 3) begin
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/s1_3.txt",  s1);
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/s2_3.txt",  s2);
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/t0_3.txt",   t0);
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/t1_3.txt",  t1);
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/tr_3.txt",  tr);
-        end
-        else begin
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/s1_5.txt",  s1);
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/s2_5.txt",  s2);
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/t0_5.txt",   t0);
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/t1_5.txt",  t1);
-            $readmemh("/home/franos/projects/dilithium-comparison/tb/KAT/tr_5.txt",  tr);
-        end
+        $readmemh({TV_SHARED_PATH, "seed.txt"}, seed);
+        $readmemh({TV_SHARED_PATH, "k.txt"}, k);
+        $readmemh({TV_SHARED_PATH, "rho.txt"}, rho);
+        $readmemh({TV_PATH, "s1.txt"}, s1);
+        $readmemh({TV_PATH, "s2.txt"}, s2);
+        $readmemh({TV_PATH, "t0.txt"}, t0);
+        $readmemh({TV_PATH, "t1.txt"}, t1);
+        $readmemh({TV_PATH, "tr.txt"}, tr);
     end
 
     initial begin
