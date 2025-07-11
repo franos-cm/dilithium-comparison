@@ -53,7 +53,7 @@ module tb_verify;
         .data_o (data_o)
     );
 
-  
+
     initial begin
         $readmemh({TV_SHARED_PATH, "rho.txt"}, rho);
         $readmemh({TV_SHARED_PATH, "msg.txt"}, msg);
