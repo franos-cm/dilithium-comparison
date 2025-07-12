@@ -5,13 +5,16 @@ import tb_pkg::*;
 module tb_verify;
     localparam logic[1:0] MODE = VERIFY_MODE;
 
-    logic tb_rst;
+    logic tb_rst, failed;
     logic [9:0] ctr, tv_ctr;
     // Since dilithium-low-res loads/dumps the data as separate
     // operations, it is useful to keep track of both also separately.
     // These counters are thus only valid for dilithium-low-res.
     integer start_time, load_sig_time, load_msg_time, exec_time, stop_time;
     integer load_pk_cycles, load_sig_cycles, load_msg_cycles, exec_cycles, total_cycles;
+    // Dump results to csv
+    integer csv_fd;
+    string file_name;
 
     logic clk = 1;
     logic rst, start, done;
@@ -20,13 +23,13 @@ module tb_verify;
     logic  [W-1:0] data_i;  
     logic [W-1:0] data_o;
 
-    logic [0:SEED_SIZE-1]  rho      [NUM_TV-1:0];
-    logic [0:SEED_SIZE-1]  c        [NUM_TV-1:0];
-    logic [0:MSG_SIZE-1]   msg      [NUM_TV-1:0];
-    logic [0:MSG_LEN_SIZE] msg_len  [NUM_TV-1:0];
-    logic [0:Z_SIZE-1]     z        [NUM_TV-1:0];
-    logic [0:H_SIZE-1]     h        [NUM_TV-1:0];
-    logic [0:T1_SIZE-1]    t1       [NUM_TV-1:0];
+    logic [0:SEED_SIZE-1]  rho      [TOTAL_TV_NUM-1:0];
+    logic [0:SEED_SIZE-1]  c        [TOTAL_TV_NUM-1:0];
+    logic [0:MSG_SIZE-1]   msg      [TOTAL_TV_NUM-1:0];
+    logic [0:MSG_LEN_SIZE] msg_len  [TOTAL_TV_NUM-1:0];
+    logic [0:Z_SIZE-1]     z        [TOTAL_TV_NUM-1:0];
+    logic [0:H_SIZE-1]     h        [TOTAL_TV_NUM-1:0];
+    logic [0:T1_SIZE-1]    t1       [TOTAL_TV_NUM-1:0];
   
     // NOTE: different Dilithiums will have same states, but different transitions
     typedef enum logic [3:0] {
@@ -55,6 +58,7 @@ module tb_verify;
 
 
     initial begin
+        // Read test vectors
         $readmemh({TV_SHARED_PATH, "rho.txt"}, rho);
         $readmemh({TV_SHARED_PATH, "msg.txt"}, msg);
         $readmemh({TV_SHARED_PATH, "msg_len.txt"}, msg_len);
@@ -62,6 +66,21 @@ module tb_verify;
         $readmemh({TV_PATH, "c.txt"}, c);
         $readmemh({TV_PATH, "z.txt"}, z);
         $readmemh({TV_PATH, "h.txt"}, h);
+
+        // Dump to csv
+        file_name = $sformatf(
+            "verify_perf%0d_lvl%0d_tv%0d_%0d.csv",
+            HIGH_PERF, SEC_LEVEL, INITIAL_TV, (INITIAL_TV+NUM_TV_TO_EXEC-1)
+        );
+        csv_fd = $fopen({RESULTS_DIR, file_name}, "w");
+        if (!csv_fd) begin
+            $fatal(1, "Failed to open CSV file for writing — does the directory exist?");
+        end
+        if (HIGH_PERF) begin
+            $fwrite(csv_fd, "test_num,total_cycles,success\n");
+        end else begin
+            $fwrite(csv_fd, "test_num,load_pk_cycles,load_sig_cycles,load_msg_cycles,exec_cycles,total_cycles,success\n");
+        end
     end
 
     initial begin
@@ -72,12 +91,13 @@ module tb_verify;
 
     always_ff @(posedge clk) begin
         if (tb_rst) begin
+            start           <= 0;
             valid_i         <= 0;
             ready_o         <= 0;
             data_i          <= 0;
             ctr             <= 0; 
-            tv_ctr          <= 0;
-            start           <= 0;
+            tv_ctr          <= INITIAL_TV;
+            failed          <= 0;
             rst             <= 1;
             state           <= S_INIT;
         end
@@ -202,7 +222,7 @@ module tb_verify;
                             ctr    <= 0;
                             state  <= HIGH_PERF ? UNLOAD_RESULT : LOAD_MLEN;
                             valid_i <= HIGH_PERF ? 0 : 1;
-                            ready_o <= HIGH_PERF ? 0 : 1;
+                            ready_o <= HIGH_PERF ? 1 : 0;
                             data_i <= msg_len[tv_ctr];
                         end else begin
                             ctr    <= ctr + 1;
@@ -213,8 +233,10 @@ module tb_verify;
                 UNLOAD_RESULT: begin
                     ready_o <= 1;
                     if (valid_o) begin
-                        if (data_o == 1) begin
+                        // NOTE: the two designs represent rejection differently
+                        if (data_o == HIGH_PERF) begin
                             $display("Rejected");
+                            failed <= 1;
                         end
                         ready_o <= 0;
                         state   <= S_STOP;
@@ -223,24 +245,32 @@ module tb_verify;
                 end
                 S_STOP: begin
                     tv_ctr  <= tv_ctr + 1;
+                    failed  <= 0;
                     state   <= S_INIT;
+
+                    total_cycles = (stop_time-start_time)/P;
                     if (HIGH_PERF) begin
-                        $display("VY%d[%d] completed in %d clock cycles", SEC_LEVEL, c, ($time-start_time)/P);
+                        $display("VY%d[%d] completed in %d clock cycles", SEC_LEVEL, tv_ctr, total_cycles);
+                        $fwrite(csv_fd, "%0d,%0d,%0d\n", tv_ctr, total_cycles, (!failed));
                     end else begin
                         load_pk_cycles = (load_sig_time-start_time)/P;
                         load_sig_cycles = (load_msg_time-load_sig_time)/P;
                         load_msg_cycles = (exec_time-load_msg_time)/P;
                         exec_cycles = (stop_time-exec_time)/P;
-                        total_cycles = (stop_time-start_time)/P;
 
                         $display(
                             "VY%d[%d] completed in %d (load pk) + %d (load sig) + %d (load msg) + %d (exec) = %d (total) clock cycles",
                             SEC_LEVEL, tv_ctr, load_pk_cycles, load_sig_cycles, load_msg_cycles, exec_cycles, total_cycles
                         );
+                        $fwrite(
+                            csv_fd, "%0d,%0d,%0d,%0d,%0d,%0d,%0d\n", tv_ctr, load_pk_cycles,
+                            load_sig_cycles, load_msg_cycles, exec_cycles, total_cycles, (!failed)
+                        );
                     end
 
-                    if (tv_ctr == NUM_TV-1) begin
+                    if ((tv_ctr - INITIAL_TV) == NUM_TV_TO_EXEC-1) begin
                         $display ("Testbench done!");
+                        $fclose(csv_fd);
                         $finish;
                     end       
                 end

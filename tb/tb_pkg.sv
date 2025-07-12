@@ -1,9 +1,12 @@
 package tb_pkg;
     // Test params: change these to change tb params
-    localparam integer HIGH_PERF = 1;
+    localparam integer HIGH_PERF = 0;
     localparam integer SEC_LEVEL = 2;
-    localparam integer NUM_TV = 5;
+    localparam integer TOTAL_TV_NUM = 100;
+    localparam integer NUM_TV_TO_EXEC = 2;
+    localparam integer INITIAL_TV = 1;
     localparam string TV_BASE_PATH = "/home/franos/projects/dilithium-comparison/tb/KAT/";
+    localparam string RESULTS_DIR = "/home/franos/projects/dilithium-comparison/tb/results/";
 
     // Calculated params
     localparam integer SEED_SIZE = 256;
@@ -41,5 +44,4 @@ package tb_pkg;
     localparam logic[1:0] KEYGEN_MODE = 2'b00;
     localparam logic[1:0] SIGN_MODE = 2'b10;
     localparam logic[1:0] VERIFY_MODE = 2'b01;
-
 endpackage

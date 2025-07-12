@@ -23,10 +23,9 @@ module adapter_low_res (
     input   logic         ready_rcv_out,
     input   logic         valid_out
 );
-
-    localparam logic[1:0] KEYGEN_MODE = 0;
-    localparam logic[1:0] SIGN_MODE = 2'd2;
+    localparam logic[1:0] KEYGEN_MODE = 2'd0;
     localparam logic[1:0] VERIFY_MODE = 2'd1;
+    localparam logic[1:0] SIGN_MODE = 2'd2;
 
     localparam logic[1:0] INGEST_OPCODE = 2'b11;
     localparam logic[1:0] DUMP_OPCODE = 2'b10;
@@ -36,26 +35,11 @@ module adapter_low_res (
     localparam logic[1:0] SEED_SUB_OPCODE = 2'b11;
 
     localparam logic[3:0] KEYGEN_OPCODE = 4'b0111;
-
-    localparam logic[3:0] PRE_VERIFY_OPCODE = 4'b0101;
     localparam logic[3:0] DIGEST_OPCODE = 4'b0001;
+    localparam logic[3:0] PRE_VERIFY_OPCODE = 4'b0101;
     localparam logic[3:0] VERIFY_OPCODE = 4'b0100;
-
-
-    // constant PAYLOAD_TYPE_PK   : std_logic_vector(1 downto 0) := "00";
-    // constant PAYLOAD_TYPE_SK   : std_logic_vector(1 downto 0) := "01";
-    // constant PAYLOAD_TYPE_SIG  : std_logic_vector(1 downto 0) := "10";
-    // constant PAYLOAD_TYPE_SEED : std_logic_vector(1 downto 0) := "11";
-    
-    // constant OPCODE_IDLE : std_logic_vector(3 downto 0)         := "0000";
-    // constant OPCODE_STOR : std_logic_vector(3 downto 0)         := "1100"; -- upper bit indicates 2-bit opcode with 2-bit parameter
-    // constant OPCODE_LOAD : std_logic_vector(3 downto 0)         := "1000";
-    // constant OPCODE_DIGEST_MSG : std_logic_vector(3 downto 0)   := "0001"; -- upper bit indicates 4-bit opcode
-    // constant OPCODE_SIGN : std_logic_vector(3 downto 0)         := "0010";
-    // constant OPCODE_SIGN_PRECOMP : std_logic_vector(3 downto 0) := "0011"; 
-    // constant OPCODE_VRFY : std_logic_vector(3 downto 0)         := "0100";
-    // constant OPCODE_VRFY_PRECOMP : std_logic_vector(3 downto 0) := "0101";
-    // constant OPCODE_KGEN : std_logic_vector(3 downto 0)         := "0111";
+    localparam logic[3:0] PRE_SIGN_OPCODE = 4'b0011;
+    localparam logic[3:0] SIGN_OPCODE = 4'b0010;
 
 
     // FSM states
@@ -73,17 +57,16 @@ module adapter_low_res (
         VERIFY_INGEST_MSG_LEN,
         VERIFY_INGEST_MSG,
         VERIFY_EXECUTE,
-        VERIFY_WAIT_DUMP
+        VERIFY_WAIT_DUMP,
+        // Sign states
+        SIGN_INGEST_SK,
+        SIGN_PREPROCESS,
+        SIGN_INGEST_MSG_LEN,
+        SIGN_INGEST_MSG,
+        SIGN_EXECUTE,
+        SIGN_DUMP_SIG
     } state_t;
     state_t current_state, next_state;
-
-    // State register
-    always_ff @(posedge clk) begin
-        if (rst)
-            current_state <= IDLE;
-        else
-            current_state <= next_state;
-    end
 
 
     logic verify_reg_enable, verify_result;
@@ -118,6 +101,15 @@ module adapter_low_res (
         end
     end
 
+
+    // State register
+    always_ff @(posedge clk) begin
+        if (rst)
+            current_state <= IDLE;
+        else
+            current_state <= next_state;
+    end
+
     // Mealy Finite State Machine
     // TODO: check if DONE signals are being correctly asserted
     always_comb begin
@@ -147,7 +139,59 @@ module adapter_low_res (
                         op_valid_in = 1;
                         next_state = VERIFY_INGEST_PK;
                     end
+                    else if (mode == SIGN_MODE) begin
+                        op_in = {INGEST_OPCODE, SK_SUB_OPCODE};
+                        op_valid_in = 1;
+                        next_state = SIGN_INGEST_SK;
+                    end
                 end
+            end
+
+            // Sign states
+            SIGN_INGEST_SK: begin
+                next_state = SIGN_INGEST_SK;
+                if (ready_out) begin
+                    op_in = PRE_SIGN_OPCODE;
+                    op_valid_in = 1;
+                    next_state = SIGN_PREPROCESS;
+                end
+            end
+            SIGN_PREPROCESS: begin
+                next_state = ready_out ? SIGN_INGEST_MSG_LEN : SIGN_PREPROCESS;
+            end
+            SIGN_INGEST_MSG_LEN: begin
+                next_state = SIGN_INGEST_MSG_LEN;
+                ready_i = valid_i;
+                if (valid_i) begin
+                    len_ctr_load = 1;
+                    last_msg_word_en = (data_i <= 4);
+                    op_in = DIGEST_OPCODE;
+                    op_valid_in = 1;
+                    next_state = SIGN_INGEST_MSG;
+                end
+            end
+            SIGN_INGEST_MSG: begin
+                next_state = SIGN_INGEST_MSG;
+                len_ctr_enable = handshake_completed;
+                last_msg_word_en = (handshake_completed & (msg_len_ctr <= 8));
+                ready_rcv_in = handshake_completed & last_msg_word;
+
+                if (ready_out) begin
+                    op_in = SIGN_OPCODE;
+                    op_valid_in = 1;
+                    next_state = SIGN_EXECUTE;
+                end
+            end
+            SIGN_EXECUTE: begin
+                if (ready_out) begin
+                    op_in = {DUMP_OPCODE, SIG_SUB_OPCODE};
+                    op_valid_in = 1;
+                end
+                next_state = ready_out ? SIGN_DUMP_SIG : SIGN_EXECUTE;
+            end
+            SIGN_DUMP_SIG: begin
+                next_state = ready_out ? IDLE : SIGN_DUMP_SIG;
+                done = ready_out;
             end
 
             // Verify states
@@ -175,9 +219,9 @@ module adapter_low_res (
                 ready_i = valid_i;
                 if (valid_i) begin
                     len_ctr_load = 1;
-                    op_valid_in = 1;
                     last_msg_word_en = (data_i <= 4);
                     op_in = DIGEST_OPCODE;
+                    op_valid_in = 1;
                     next_state = VERIFY_INGEST_MSG;
                 end
             end
