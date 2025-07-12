@@ -461,15 +461,13 @@ begin
         -- store rho
         -----------------------------------------------------------------------------
         when s_rho => 
-            q.ready_rcv <= '1';
-            
+            q.ready_rcv <= d.valid;
             rcntd.en <= d.valid;
             q.rhoregd.en_rotate <= d.valid;
             q.rhoregd.en_write <= d.valid;
             
             if rcntq.max = '1' and d.valid = '1'
             then
-                -- q.ready_rcv <= '0';
                 case d.payload_type is
                     when PAYLOAD_TYPE_PK => nextstate <= s_t1;
                     when PAYLOAD_TYPE_SK => nextstate <= s_k; rcntd.rst <= '1';
@@ -481,15 +479,13 @@ begin
         -- store K
         -----------------------------------------------------------------------------
         when s_k =>
-            q.ready_rcv <= '1';
-            
+            q.ready_rcv <= d.valid;
             rcntd.en <= d.valid;
             q.Kregd.en_rotate <= d.valid;
             q.Kregd.en_write <= d.valid;
             
             if rcntq.max = '1' and d.valid = '1'
             then
-                q.ready_rcv <= '0';
                 nextstate <= s_tr;
                 rcntd.rst <= '1';
             end if;
@@ -498,15 +494,13 @@ begin
         -- store tr
         -----------------------------------------------------------------------------
         when s_tr =>
-            q.ready_rcv <= '1';
-            
+            q.ready_rcv <= d.valid;
             rcntd.en <= d.valid;
             q.trregd.en_rotate <= d.valid;
             q.trregd.en_write <= d.valid;
             
             if rcntq.max = '1' and d.valid = '1'
             then
-                q.ready_rcv <= '0';
                 nextstate <= s_s1_loadreg;
             end if;
         
@@ -528,7 +522,7 @@ begin
         -- store s1
         -----------------------------------------------------------------------------
         when s_s1_loadreg =>
-            q.ready_rcv <= '1';
+            q.ready_rcv <= d.valid;
             elcntd.en <= d.valid;
             etareg_en_load <= d.valid;
             escntd.rst <= '1'; -- prepare for storing
@@ -537,14 +531,12 @@ begin
             then
                 if d.valid = '1'
                 then
-                    q.ready_rcv <= '0';
                     nextstate <= s_s1_store;
                 end if;
             elsif DILITHIUM_eta = 2
             then
                 if elcntq.max = '1' and d.valid = '1'
                 then
-                    q.ready_rcv <= '0';
                     nextstate <= s_s1_store;
                 end if;
             else
@@ -571,7 +563,7 @@ begin
         -- store s2
         -----------------------------------------------------------------------------
         when s_s2_loadreg =>
-            q.ready_rcv <= '1';
+            q.ready_rcv <= d.valid;
             elcntd.en <= d.valid;
             etareg_en_load <= d.valid;
             escntd.rst <= '1'; -- prepare for storing
@@ -580,14 +572,12 @@ begin
             then
                 if d.valid = '1'
                 then
-                    q.ready_rcv <= '0';
                     nextstate <= s_s2_store;
                 end if;
             elsif DILITHIUM_eta = 2
             then
                 if elcntq.max = '1' and d.valid = '1'
                 then
-                    q.ready_rcv <= '0';
                     nextstate <= s_s2_store;
                 end if;
             else
@@ -614,7 +604,7 @@ begin
         -- store t0
         -----------------------------------------------------------------------------
         when s_t0 =>
-            q.ready_rcv <= d.fifot0q.ready_rcv and not d.fifot0q.toggle;
+            q.ready_rcv <= d.fifot0q.ready_rcv; -- and not d.fifot0q.toggle;
             q.fifot0d.valid <= d.valid;
             q.fifot0d.ready_rcv <= '1';
             q.convyzd.en <= '1';
@@ -624,7 +614,6 @@ begin
             
             if memcntq.max = '1' and d.fifot0q.valid = '1'
             then
-                q.ready_rcv <= '0';
                 nextstate <= s_t0_finish;
             end if;
         
@@ -641,7 +630,7 @@ begin
         -- store c
         -----------------------------------------------------------------------------
         when s_c =>
-            q.ready_rcv <= '1';
+            q.ready_rcv <= d.valid;
             rcntd.en <= d.valid;
             q.chashregd.en_rotate <= d.valid;
             q.chashregd.en_write <= d.valid;
@@ -650,7 +639,6 @@ begin
             
             if rcntq.max = '1'
             then
-                -- q.ready_rcv <= '0';
                 nextstate <= s_z;
             end if;
         
@@ -714,8 +702,8 @@ begin
             end if; 
         
         when s_h_poly_rcv =>
-            -- q.ready_rcv <= '1';
-            -- hbuf_en <= d.valid;
+            --q.ready_rcv <= '1';
+            --hbuf_en <= d.valid;
             
             if d.valid = '1'
             then
