@@ -29,7 +29,10 @@ entity dilithium_top_iii is
         valid_in        : in std_logic;
         data_out        : out std_logic_vector(31 downto 0);
         ready_rcv_out   : out std_logic;
-        valid_out       : out std_logic
+        valid_out       : out std_logic;
+        -- Debug signal for evaluating the number of reject loops
+        -- Should NOT exist in the final design, since it could be a side channel vulnerability
+        sign_reject: out std_logic
     );
 end dilithium_top_iii;
 
@@ -407,7 +410,8 @@ signctrl: entity work.sign_iii
 port map (
     clk => clk,
     d => signd,
-    q => signq
+    q => signq,
+    sign_reject => sign_reject
 );
 
 signd.convyzq <= convyzq;

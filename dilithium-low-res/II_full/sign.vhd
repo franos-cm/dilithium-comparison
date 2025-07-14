@@ -21,7 +21,10 @@ entity sign_ii is
     Port (
         clk : in std_logic;
         d : in sign_in_type;
-        q : out sign_out_type
+        q : out sign_out_type;
+        -- Debug signal for evaluating the number of reject loops
+        -- Should NOT exist in the final design, since it could be a side channel vulnerability
+        sign_reject: out std_logic
     );
 end sign_ii;
 
@@ -758,6 +761,7 @@ begin
             then
                 nextstate <= expand_y_finish;
             end if;
+            sign_reject <= '0';
         
         when expand_y_finish =>
             q.expandyd.en <= '1';
@@ -1297,6 +1301,7 @@ begin
             maccd_sign.rst <= '1';
             kappa_inc <= '1';
             nextstate <= expand_y;
+            sign_reject <= '1';
         
         when others => nextstate <= idle;
         

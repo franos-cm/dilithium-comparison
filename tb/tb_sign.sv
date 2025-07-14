@@ -23,6 +23,7 @@ module tb_sign;
     logic ready_i, valid_o;
     logic  [W-1:0] data_i;  
     logic [W-1:0] data_o;
+    logic [7:0] reject_counter;
 
     logic [0:SEED_SIZE-1]  rho       [TOTAL_TV_NUM-1:0];
     logic [0:SEED_SIZE-1]  k         [TOTAL_TV_NUM-1:0];
@@ -59,7 +60,8 @@ module tb_sign;
         .data_i (data_i),
         .valid_o (valid_o),
         .ready_o (ready_o),
-        .data_o (data_o)
+        .data_o (data_o),
+        .reject_counter (reject_counter)
     );
 
 
@@ -87,9 +89,9 @@ module tb_sign;
             $fatal(1, "Failed to open CSV file for writing — does the directory exist?");
         end
         if (HIGH_PERF) begin
-            $fwrite(csv_fd, "test_num,total_cycles,success\n");
+            $fwrite(csv_fd, "test_num,total_cycles,rejects_count,success\n");
         end else begin
-            $fwrite(csv_fd, "test_num,load_sk_cycles,load_msg_cycles,exec_cycles,unload_cycles,total_cycles,success\n");
+            $fwrite(csv_fd, "test_num,load_sk_cycles,load_msg_cycles,exec_cycles,unload_cycles,total_cycles,rejects_count,success\n");
         end
     end
 
@@ -314,8 +316,8 @@ module tb_sign;
 
                     total_cycles = (stop_time-start_time)/P;
                     if (HIGH_PERF) begin
-                        $display("SG%d[%d] completed in %d clock cycles", SEC_LEVEL, tv_ctr, total_cycles);
-                        $fwrite(csv_fd, "%0d,%0d,%0d\n", tv_ctr, total_cycles, (!failed));
+                        $display("SG%d[%d] completed in %d clock cycles with %d reject(s)", SEC_LEVEL, tv_ctr, total_cycles, reject_counter);
+                        $fwrite(csv_fd, "%0d,%0d,%d,%0d\n", tv_ctr, total_cycles, reject_counter, (!failed));
                     end else begin
                         load_sk_cycles = (load_msg_time-start_time)/P;
                         load_msg_cycles = (exec_time-load_msg_time)/P;
@@ -323,12 +325,12 @@ module tb_sign;
                         unload_cycles = (stop_time-unload_time)/P;
 
                         $display(
-                            "SG%d[%d] completed in %d (load sk) + %d (load msg) + %d (exec) + %d (unload) = %d (total) clock cycles",
-                            SEC_LEVEL, tv_ctr, load_sk_cycles, load_msg_cycles, exec_cycles, unload_cycles, total_cycles
+                            "SG%d[%d] completed in %d (load sk) + %d (load msg) + %d (exec) + %d (unload) = %d (total) clock cycles with %d reject(s)",
+                            SEC_LEVEL, tv_ctr, load_sk_cycles, load_msg_cycles, exec_cycles, unload_cycles, total_cycles, reject_counter
                         );
                         $fwrite(
-                            csv_fd, "%0d,%0d,%0d,%0d,%0d,%0d,%0d\n", tv_ctr, load_sk_cycles,
-                            load_msg_cycles, exec_cycles, unload_cycles, total_cycles, (!failed)
+                            csv_fd, "%0d,%0d,%0d,%0d,%0d,%0d,%0d,%0d\n", tv_ctr, load_sk_cycles,
+                            load_msg_cycles, exec_cycles, unload_cycles, total_cycles, reject_counter, (!failed)
                         );
                     end
                     if ((tv_ctr - INITIAL_TV) == NUM_TV_TO_EXEC-1) begin

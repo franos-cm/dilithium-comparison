@@ -13,7 +13,8 @@ module dilithium_high_perf (
     input  logic           ready_o,
     output logic[63:0]     data_o,
     output logic           done,
-    output logic           last
+    output logic           last,
+    output logic           sign_reject
 );
     logic dilithium_valid_o, dilithium_ready_o;
     logic [63:0] dilithium_data_o;
@@ -45,7 +46,8 @@ module dilithium_high_perf (
         .data_i (data_i),
         .valid_o (dilithium_valid_o),
         .ready_o (dilithium_ready_o),
-        .data_o (dilithium_data_o)
+        .data_o (dilithium_data_o),
+        .sign_reject(sign_reject)
     );
 
 endmodule

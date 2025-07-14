@@ -4,7 +4,7 @@ package tb_pkg;
     localparam integer SEC_LEVEL = 2;
     localparam integer TOTAL_TV_NUM = 100;
     localparam integer NUM_TV_TO_EXEC = 2;
-    localparam integer INITIAL_TV = 1;
+    localparam integer INITIAL_TV = 0;
     localparam string TV_BASE_PATH = "/home/franos/projects/dilithium-comparison/tb/KAT/";
     localparam string RESULTS_DIR = "/home/franos/projects/dilithium-comparison/tb/results/";
 

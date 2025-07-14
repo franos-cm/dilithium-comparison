@@ -38,7 +38,10 @@ module combined_top #(
     input [W-1:0]      data_i,
     output reg         valid_o = 0,
     input              ready_o,
-    output reg [W-1:0] data_o = 0
+    output reg [W-1:0] data_o = 0,
+    // Debug signal for evaluating the number of reject loops
+    // Should NOT exist in the final design, since it could be a side channel vulnerability
+    output reg sign_reject = 0
     );
     
     localparam
@@ -2179,6 +2182,7 @@ module combined_top #(
             di_norm     = dib2_op[1];
             
             /* --- CTRL Logic --- */ 
+            sign_reject = 0;
             nstate2    = (done_op[1] && addr1_sel_op[1] == K-1) ? FSM2_MAKEHINT : FSM2_SUB_W0_CS2;
             
             rst_op[1]   = (done_op[1]) ? 1 : 0;
@@ -2221,6 +2225,7 @@ module combined_top #(
                     start_c = 1;
                     ctr0fsm2_next = 0;
                     ctrfsm2_next  = 0;
+                    sign_reject = 1;
                 end else begin
                     nstart_fsm0 = 1;
                     nstate2     = FSM2_STALL;

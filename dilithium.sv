@@ -15,7 +15,9 @@ module dilithium #(
     input  logic [W-1:0] data_i,
     output logic         valid_o,
     input  logic         ready_o,
-    output logic [W-1:0] data_o
+    output logic [W-1:0] data_o,
+    // Debug signal for evaluating the number of reject loops
+    output logic [7:0] reject_counter
 );
     // NOTE: for some reason casting doesnt work, so this is necessary
     // localparam logic [2:0] sec_lvl_sig = 3'(SEC_LEVEL);
@@ -24,7 +26,8 @@ module dilithium #(
                                          (SEC_LEVEL == 5) ? 3'b101 : 3'b000;
 
     logic start_strobe;
-    logic done_strobe;
+    logic done_internal;
+    logic sign_reject_internal;
 
 
     edge_detector start_detector (
@@ -36,8 +39,24 @@ module dilithium #(
     latch done_latch (
         .clk  (clk),
         .rst  (rst),
-        .set(done_strobe),
+        .set(done_internal),
         .q(done)
+    );
+
+    // Debug counter to count the number of rejection interaction during sign
+    edge_detector reject_detector (
+        .clk  (clk),
+        .signal_in(sign_reject),
+        .rising_edge(sign_reject_internal)
+    );
+    counterm #(
+        .WIDTH(8)
+    ) rejection_counter (
+        .clk (clk),
+        .rst (rst || start),
+        .load_max('0),
+        .en(sign_reject_internal),
+        .counter(reject_counter)
     );
 
     // Wires for intermediate signals
@@ -55,7 +74,8 @@ module dilithium #(
                 .valid_o(valid_o),
                 .ready_o(ready_o),
                 .data_o(data_o),
-                .done(done_strobe)
+                .done(done_internal),
+                .sign_reject(sign_reject)
             );
         end
         else begin
@@ -73,7 +93,8 @@ module dilithium #(
                 .valid_o(valid_o),
                 .ready_o(ready_o),
                 .data_o(data_o),
-                .done(done_strobe)
+                .done(done_internal),
+                .sign_reject(sign_reject)
             );
         end
     endgenerate

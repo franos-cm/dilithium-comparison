@@ -13,7 +13,8 @@ module dilithium_low_res #(
     output logic         valid_o,
     input  logic         ready_o,
     output logic [31:0]  data_o,
-    output logic         done
+    output logic         done,
+    output logic         sign_reject
 );
 
     logic [3:0]   op_in;
@@ -64,7 +65,8 @@ module dilithium_low_res #(
                 .valid_in(valid_i),
                 .data_out(data_out),
                 .ready_rcv_out(ready_rcv_out),
-                .valid_out(valid_out)
+                .valid_out(valid_out),
+                .sign_reject(sign_reject)
             );
         end
         else if (SEC_LEVEL == 3) begin
@@ -78,7 +80,8 @@ module dilithium_low_res #(
                 .valid_in(valid_i),
                 .data_out(data_out),
                 .ready_rcv_out(ready_rcv_out),
-                .valid_out(valid_out)
+                .valid_out(valid_out),
+                .sign_reject(sign_reject)
             );
         end
         else if (SEC_LEVEL == 5) begin
@@ -92,7 +95,8 @@ module dilithium_low_res #(
                 .valid_in(valid_i),
                 .data_out(data_out),
                 .ready_rcv_out(ready_rcv_out),
-                .valid_out(valid_out)
+                .valid_out(valid_out),
+                .sign_reject(sign_reject)
             );
         end
     endgenerate
