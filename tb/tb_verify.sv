@@ -120,11 +120,13 @@ module tb_verify;
                     end
                 end
                 S_START: begin
-                    start_time = $time;
                     start <= 1;
                     state <= LOAD_RHO;
                 end
                 LOAD_RHO: begin
+                    if (start) begin
+                        start_time = $time;
+                    end
                     valid_i <= 1;
                     data_i <= rho[tv_ctr][ctr*W +: W];
                 

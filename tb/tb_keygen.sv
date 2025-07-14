@@ -126,11 +126,13 @@ module tb_keygen;
                     end
                 end
                 S_START: begin
-                    start_time = $time;
                     start <= 1;
                     state <= LOAD_SEED;
                 end
                 LOAD_SEED: begin
+                    if (start) begin
+                        start_time = $time;
+                    end
                     valid_i <= 1;
                     data_i  <= seed[tv_ctr][0 +: W];
                 
@@ -257,6 +259,7 @@ module tb_keygen;
                         if (ctr == SEED_WORDS_NUM-1) begin
                             ctr <= 0;
                             state <= HIGH_PERF ? S_STOP : UNLOAD_S1;
+                            stop_time = $time;
                         end
                     end
                 end

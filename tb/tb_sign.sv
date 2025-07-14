@@ -133,11 +133,13 @@ module tb_sign;
                     end
                 end
                 S_START: begin
-                    start_time <= $time;
                     start <= 1;
                     state <= LOAD_RHO;
                 end
                 LOAD_RHO: begin
+                    if (start) begin
+                        start_time = $time;
+                    end
                     valid_i <= 1;
                     data_i <= rho[tv_ctr][ctr*W +: W];
                 
@@ -305,6 +307,7 @@ module tb_sign;
                         if (ctr == SEED_WORDS_NUM-1) begin
                             ctr <= 0;
                             state <= HIGH_PERF ? S_STOP : UNLOAD_Z;
+                            stop_time = $time;
                         end
                     end
                 end
