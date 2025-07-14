@@ -6,7 +6,7 @@ module tb_verify;
     localparam logic[1:0] MODE = VERIFY_MODE;
 
     logic tb_rst, failed;
-    logic [9:0] ctr, tv_ctr;
+    integer ctr, tv_ctr;
     // Since dilithium-low-res loads/dumps the data as separate
     // operations, it is useful to keep track of both also separately.
     // These counters are thus only valid for dilithium-low-res.
