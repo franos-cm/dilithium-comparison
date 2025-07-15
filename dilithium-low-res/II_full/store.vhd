@@ -327,8 +327,8 @@ begin
             q.memd(m).wdata <= etareg_out;
             
         when s_z | s_z_finish =>
-            m := memory_map.zy(memcnt_pipeline(DELAY_CONV_YZ) / (DILITHIUM_N/4)).memory_index;
-            p := memory_map.zy(memcnt_pipeline(DELAY_CONV_YZ) / (DILITHIUM_N/4)).poly_index;
+            m := memory_map.zy((memcnt_pipeline(DELAY_CONV_YZ) / (DILITHIUM_N/4)) mod DILITHIUM_l).memory_index;
+            p := memory_map.zy((memcnt_pipeline(DELAY_CONV_YZ) / (DILITHIUM_N/4)) mod DILITHIUM_l).poly_index;
             q.memd(m).wsel <= p;
             for i in 0 to 3
             loop
