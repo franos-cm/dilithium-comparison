@@ -8,10 +8,14 @@ Although a plethora of work exists detailing different hardware-accelerated impl
 
 For reasons that will become apparent later, we have decided to call the implementation in [2] "LowRes" (*Low Resource Usage*), and the implementation in [3] "HighPerf" (*High Performance*), in order to differentiate them. We also refer to the three main Dilithium operations as `KEYGEN`, `SIGN`, and `VERIFY`.
 
-**Surprisingly, both designs originally had bugs which either produced incorrect output values, or limited their practical usability in real-world scenarios.** Notably, in the case of HighPerf, a small but critical bug related to the NTT module was discovered and detailed in [5] (Section 3.B.1). Although relatively easy to fix, the time-constrained nature of this project means that **the original module has (so far) been left unchanged**, since the bug is not expected to impact either latency or resource usage significantly. 
+>**⚠️**  **Warning**
+>
+>**Surprisingly, both designs originally have bugs which either produce incorrect output values, or limit their practical usability in real-world scenarios.** Notably, in the case of HighPerf, a small but critical bug related to the NTT module was discovered and detailed in [5] (Section 3.B.1.). Although relatively easy to fix, the time-constrained nature of this project means that **the original module has (so far) been left unchanged**, since the bug is not expected to impact either latency or resource usage significantly. 
 
-> ℹ️ **Note:**  
-> It should be noted that there is also a third hardware-accelerated implementation of Dilithium in *Optimized Hardware-Software Co-Design for Kyber and Dilithium on RISC-V SoC FPGA* [4].
+
+> ℹ️ **Note**
+> 
+> There is also a third hardware-accelerated implementation of Dilithium in *Optimized Hardware-Software Co-Design for Kyber and Dilithium on RISC-V SoC FPGA* [4].
 > 
 > However, this alternative follows a hybrid hardware-software approach, in which only some operations are accelerated in hardware, and the others are performed by four ARM hard cores.
 >
@@ -85,7 +89,60 @@ Finally, as previously mentioned, since LowRes allows for separating load and st
 
 The first table below shows the latency metrics obtained by a behavioural simulation of both designs, using the unified testbench.
 
-[Table1]
+<table style="border-collapse: collapse; width: 80%; margin: auto;">
+  <caption style="text-align: center; white-space: nowrap;">
+    <strong>Table 1: KEYGEN cycle counts for each core, step, and security level (N = 10)</strong>
+  </caption>
+  <thead>
+    <tr>
+      <th colspan="2" style="border-right: 1px solid black;"></th>
+      <th colspan="3" style="text-align: center;"><strong>Security Level</strong></th>
+    </tr>
+    <tr>
+      <th style="border-right: 1px solid black; text-align: center;"><strong>Core</strong></th>
+      <th style="border-right: 1px solid black; text-align: center;"><strong>Step</strong></th>
+      <th style="border-right: 1px solid black; text-align: center;"><strong>2</strong></th>
+      <th style="border-right: 1px solid black; text-align: center;"><strong>3</strong></th>
+      <th style="text-align: center;"><strong>5</strong></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td rowspan="4" style="border-right: 1px solid black; text-align: center;"><strong>LowRes</strong></td>
+      <td style="border-right: 1px solid black; text-align: center;"><strong>load data</strong></td>
+      <td style="border-right: 1px solid black; text-align: right;">10.0</td>
+      <td style="border-right: 1px solid black; text-align: right;">10.0</td>
+      <td style="text-align: right;">10.0</td>
+    </tr>
+    <tr>
+      <td style="border-right: 1px solid black; text-align: center;"><strong>execute</strong></td>
+      <td style="border-right: 1px solid black; text-align: right;">18,724.6</td>
+      <td style="border-right: 1px solid black; text-align: right;">33,045.3</td>
+      <td style="text-align: right;">50,987.6</td>
+    </tr>
+    <tr>
+      <td style="border-right: 1px solid black; text-align: center;"><strong>unload data</strong></td>
+      <td style="border-right: 1px solid black; text-align: right;">2,882.0</td>
+      <td style="border-right: 1px solid black; text-align: right;">5,586.0</td>
+      <td style="text-align: right;">5,602.0</td>
+    </tr>
+    <tr>
+      <td style="border-top: 2px solid black; border-right: 1px solid black; text-align: center;"><strong>total</strong></td>
+      <td style="border-top: 2px solid black; border-right: 1px solid black; text-align: right;">21,616.6</td>
+      <td style="border-top: 2px solid black; border-right: 1px solid black; text-align: right;">38,641.3</td>
+      <td style="border-top: 2px solid black; text-align: right;">56,599.6</td>
+    </tr>
+    <tr>
+      <td style="border-top: 3px solid black; border-right: 1px solid black; text-align: center;"><strong>HighPerf</strong></td>
+      <td style="border-top: 3px solid black; border-right: 1px solid black; text-align: center;"><strong>total</strong></td>
+      <td style="border-top: 3px solid black; border-right: 1px solid black; text-align: right;">4,605.3</td>
+      <td style="border-top: 3px solid black; border-right: 1px solid black; text-align: right;">7,898.3</td>
+      <td style="border-top: 3px solid black; text-align: right;">13,511.8</td>
+    </tr>
+  </tbody>
+</table>
+
+
 
 The second table shows the resource usage for both designs, as synthethized by Vivado 2024.2 for different Xilinx boards.
 
