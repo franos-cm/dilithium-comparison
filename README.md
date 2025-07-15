@@ -2,16 +2,21 @@
 
 This project briefly compares two designs that completely implement the CRYSTALS-Dilithium [1] algorithm on RTL. Some limitations of each design are mentioned, along with quantitative performance measurements.
 
+## ⚠️ A note on correctness
+
+**Originally, both designs had bugs which either produce incorrect output values, or limited their usability in real-world scenarios.**
+
+Notably, in the case of the design in [2], a small but critical bug related to the NTT module was discovered and detailed in the work presented in [5]. Although relatively easy to fix, the time-constrained nature of this project means that **this bug has (so far) been left unchanged**, since it is not expected to impact either latency or resource usage significantly. It does, however, affect the correctness of both signature generation and verification.
+
+Moreover, another bug was found in the design in [2], concerning an out-of-bounds memory access when simulating signature verifications specifically using the security level III parameters. The memory accesses were changed so as to allow the simulation to complete. However, it is possible that this quick fix has not corrected the underlying bug.
+
+The remaining bugs found, in both the designs, were mostly concerning the handshake protocol used. These were duly fixed, as briefly mentioned in Section 2.2.
+
+
+
 # 1. Introduction
 
 Although a plethora of work exists detailing different hardware-accelerated implementations of Dilithium, the source code for them are tipically not found online. The only exceptions found are the two projects presented here: *A Hard Crystal - Implementing Dilithium on Reconfigurable Hardware* [2], and *High-Performance Hardware Implementation of CRYSTALS-Dilithium* [3]. These works follow somewhat different strategies in implementing Dilithium, makint it interesting to compare them, not only in terms of latency and resource usage, but also from a qualitative perspective.
-
-For reasons that will become apparent later, we have decided to call the implementation in [2] "LowRes" (*Low Resource Usage*), and the implementation in [3] "HighPerf" (*High Performance*), in order to differentiate them. We also refer to the three main Dilithium operations as `KEYGEN`, `SIGN`, and `VERIFY`.
-
->**⚠️**  **Warning**
->
->**Surprisingly, both designs originally have bugs which either produce incorrect output values, or limit their practical usability in real-world scenarios.** Notably, in the case of HighPerf, a small but critical bug related to the NTT module was discovered and detailed in [5] (Section 3.B.1.). Although relatively easy to fix, the time-constrained nature of this project means that **the original module has (so far) been left unchanged**, since the bug is not expected to impact either latency or resource usage significantly. 
-
 
 > ℹ️ **Note**
 > 
@@ -21,13 +26,16 @@ For reasons that will become apparent later, we have decided to call the impleme
 >
 > Therefore, this third implementation not only differs significantly from the others, but it is also not as easily simulated using the typical Vivado workflow.
 
+For reasons that will become apparent later, we have decided to call the implementation in [2] "LowRes" (*Low Resource Usage*), and the implementation in [3] "HighPerf" (*High Performance*), in order to differentiate them. We also refer to the three main Dilithium operations as `KEYGEN`, `SIGN`, and `VERIFY`.
+
+
 # 2. Key design points
 
 ## 2.1. Modularity
 
 The two cores are designed with different degrees of modularity.
 
-Especifically, LowRes is composed of three base designs — each capable of performing one of Dilithium's three main operations — and one additional design that essentially integrates the other three to provide a complete suite for the algorithm.
+Specifically, LowRes is composed of three base designs — each capable of performing one of Dilithium's three main operations — and one additional design that essentially integrates the other three to provide a complete suite for the algorithm.
 
 This modular structure allows for projects which only need to perform one of the operations (for example, a system that is only interested in validating signatures), to reduce its resource usage.
 
@@ -82,73 +90,38 @@ Before the testbench could be implemented, we first had to standardize the inter
 
 The Known Answer Test (KAT) vectors from CRYSTALS own reference implementation of Dilithium [9] were used as the input and output vectors for the testbench.
 
+The testbench was designed to avoid introducing any artificial delays during load and store operations. Specifically, it continuously asserts readiness to send and receive data (i.e. there is no backpressure), thus minimizing load and store latencies and allowing a best-case measurement of the cores’s performance.
+
 Finally, as previously mentioned, since LowRes allows for separating load and store operations from the main computation step, it is useful to similarly consider these steps separately when measuring latency. On the other hand, given HighPerf's pipelined and parallel design, there is no clear separation between these steps, and only the total latency is reported.
 
 
 # 3. Results
 
-The first table below shows the latency metrics obtained by a behavioural simulation of both designs, using the unified testbench.
+Both designs had their behaviours simulated using the Vivado Simulator 2024.2. Table 1, Table 2, and Table 3 exhibit, repectively, the cycle latencies observed for `KEYGEN`, `SIGN`, and `VERIFY`.
 
-<table style="border-collapse: collapse; width: 80%; margin: auto;">
-  <caption style="text-align: center; white-space: nowrap;">
-    <strong>Table 1: KEYGEN cycle counts for each core, step, and security level (N = 10)</strong>
-  </caption>
-  <thead>
-    <tr>
-      <th colspan="2" style="border-right: 1px solid black;"></th>
-      <th colspan="3" style="text-align: center;"><strong>Security Level</strong></th>
-    </tr>
-    <tr>
-      <th style="border-right: 1px solid black; text-align: center;"><strong>Core</strong></th>
-      <th style="border-right: 1px solid black; text-align: center;"><strong>Step</strong></th>
-      <th style="border-right: 1px solid black; text-align: center;"><strong>2</strong></th>
-      <th style="border-right: 1px solid black; text-align: center;"><strong>3</strong></th>
-      <th style="text-align: center;"><strong>5</strong></th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td rowspan="4" style="border-right: 1px solid black; text-align: center;"><strong>LowRes</strong></td>
-      <td style="border-right: 1px solid black; text-align: center;"><strong>load data</strong></td>
-      <td style="border-right: 1px solid black; text-align: right;">10.0</td>
-      <td style="border-right: 1px solid black; text-align: right;">10.0</td>
-      <td style="text-align: right;">10.0</td>
-    </tr>
-    <tr>
-      <td style="border-right: 1px solid black; text-align: center;"><strong>execute</strong></td>
-      <td style="border-right: 1px solid black; text-align: right;">18,724.6</td>
-      <td style="border-right: 1px solid black; text-align: right;">33,045.3</td>
-      <td style="text-align: right;">50,987.6</td>
-    </tr>
-    <tr>
-      <td style="border-right: 1px solid black; text-align: center;"><strong>unload data</strong></td>
-      <td style="border-right: 1px solid black; text-align: right;">2,882.0</td>
-      <td style="border-right: 1px solid black; text-align: right;">5,586.0</td>
-      <td style="text-align: right;">5,602.0</td>
-    </tr>
-    <tr>
-      <td style="border-top: 2px solid black; border-right: 1px solid black; text-align: center;"><strong>total</strong></td>
-      <td style="border-top: 2px solid black; border-right: 1px solid black; text-align: right;">21,616.6</td>
-      <td style="border-top: 2px solid black; border-right: 1px solid black; text-align: right;">38,641.3</td>
-      <td style="border-top: 2px solid black; text-align: right;">56,599.6</td>
-    </tr>
-    <tr>
-      <td style="border-top: 3px solid black; border-right: 1px solid black; text-align: center;"><strong>HighPerf</strong></td>
-      <td style="border-top: 3px solid black; border-right: 1px solid black; text-align: center;"><strong>total</strong></td>
-      <td style="border-top: 3px solid black; border-right: 1px solid black; text-align: right;">4,605.3</td>
-      <td style="border-top: 3px solid black; border-right: 1px solid black; text-align: right;">7,898.3</td>
-      <td style="border-top: 3px solid black; text-align: right;">13,511.8</td>
-    </tr>
-  </tbody>
-</table>
+![Table1](docs/table1.png)
+
+![Table3](docs/table3.png)
 
 
+For the `SIGN` operation, inkeeping with the standard adopted by articles [2] and [3], we measure both the best case (i.e. the signature is accepted in the first try) performance, and the average case performance. We also show the estimated latency for each rejection cycle.
 
-The second table shows the resource usage for both designs, as synthethized by Vivado 2024.2 for different Xilinx boards.
+It is then possible to compare, in Table 4, the latencies observed during these simulations, with the ones reported on the original works.
 
-[Table2]
+[Table4]
+
+The results obtained for HighPerf are statistically consistent with the ones reported in the original paper. In contrast, the latency reported for LowRes appears significantly underestimated, likely due to the omission of data load times prior to execution.
+
+While excluding data load times may be justified in certain scenarios — for example, when verifying multiple signatures using the same public key — this implicitly assumes a best-case situation that favors LowRes in comparison to HighPerf. In practice, such reuse is often infrequent, particularly for operations like KEYGEN, making the reported latencies less representative of its performance.
+
+Finally, the FPGA resources needed for each design are shown in Table 5. Since HighPerf uses a single design for all security levels, the resources needed for all levels are, evidently, constant.
+
 
 # Conclusion
+
+We have presented a qualitative and quantitative comparison between two CRYSTALS-Dilithium RTL designs that are at opposite ends of the latency/resources trade-off: one, *HighPerf*, focuses on minimizing latency at the cost of a high resource usage; the other, *LowRes*, excels at the opposite, and provides even smaller cores that perform a subset of the algorithm operations.
+
+It must be noted that, after the previously mentioned changes made to HighPerf, it correctly executes the Dilithium algorithm for all vectors in the test suite, and has thus been determined to be a correct implementation, with the notable caveat of only signing messages up to 4GB. LowRes, on the other hand, still has *at least one* (known) bug in its design, affecting the correctness of the algorithm. This must obviously be fixed, if one intends to use this implementation in a practical scenario.
 
 # References
 
