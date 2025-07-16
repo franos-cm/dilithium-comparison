@@ -4,11 +4,11 @@ This project briefly compares two  RTL designs that fully implement the CRYSTALS
 
 ## ⚠️ A note on correctness
 
-**Originally, both designs had bugs which either produce incorrect output values, or limited their usability in real-world scenarios.**
+**Originally, both designs had bugs which either produced incorrect output values, or limited their usability in real-world scenarios.**
 
 Notably, in the case of the design in [2], a small but critical bug related to the NTT module was discovered and detailed in the work presented in [5]. Although relatively easy to fix, the time-constrained nature of this project means that **this bug has (so far) been left unchanged**, since it is not expected to impact either latency or resource usage significantly. It does, however, affect the correctness of both signature generation and verification.
 
-Moreover, another bug was found in the design in [2], concerning an out-of-bounds memory access when simulating signature verifications specifically using the security level III parameters. The memory accesses were changed so as to allow the simulation to complete. However, it is possible that this quick fix has not corrected the underlying bug.
+Moreover, another bug was found in the design in [2], concerning an out-of-bounds memory access when simulating signature verifications, specifically using the security level 3 parameters. The memory accesses were changed so as to allow the simulation to complete. However, it is possible that this quick fix has not corrected the underlying bug.
 
 The remaining bugs found, in both the designs, were mostly concerning the handshake protocol used. These were duly fixed, as briefly mentioned in Section 2.2.
 
@@ -24,7 +24,7 @@ Although a plethora of work exists detailing different hardware-accelerated impl
 > 
 > However, this alternative follows a hybrid hardware-software approach, in which only some operations are accelerated in hardware, and the others are performed by four ARM hard cores.
 >
-> Therefore, this third implementation not only differs significantly from the others, but it is also not as easily simulated using the typical Vivado workflow.
+> Therefore, this third implementation not only differs significantly from the others, but it also is not as easily simulated using the typical Vivado workflow.
 
 For reasons that will become apparent later, we have decided to call the implementation in [2] "LowRes" (*Low Resource Usage*), and the implementation in [3] "HighPerf" (*High Performance*), in order to differentiate them. We also refer to the three main Dilithium operations as `KEYGEN`, `SIGN`, and `VERIFY`.
 
@@ -118,16 +118,28 @@ The results obtained for HighPerf are statistically consistent with the ones rep
 
 While excluding data load times may be justified in certain scenarios — for example, when verifying multiple signatures using the same public key — this implicitly assumes a best-case situation that favors LowRes in comparison to HighPerf. In practice, such reuse is often infrequent, particularly for operations like KEYGEN, making the reported latencies less representative of its performance.
 
-Lastly, the FPGA resources needed for each design are shown in Table 5. Since HighPerf uses the same design for all security levels, its resource usage remains constant across all levels.
+Lastly, all designs were implemented in Vivado targeting Xilinx's Artix-7 `XC7A100TCSG324-1` FPGA. This FPGA was chosen since both original articles also use a `XC7A100T` to present their metrics. The resources needed for each design are shown in Table 5. Since HighPerf uses the same design for all security levels, its resource usage remains constant across all levels.
+
+![Table5](docs/table5.png)
+
+For both designs, we notice that the number of DSP and BRAM blocks obtained in this work matches the values reported in the original articles.
+
+In contrast, the figures obtained for the number of LUTs used were somewhat higher than the reported figures. In the specific case of HighPerf, this can be likely attributed to the addition of an extra buffer in the design, as mentioned in Section 2.2. In LowRes, there is no similar explanation, although the differences observed are even more expressive.
+
+The most notable discrepancy between the two figure reports is regarding the maximum frequency. In that sense, it is important to note that the maximum frequency reported in this work was obtained directly from Vivado’s post-implementation timing analysis. HighPerf's original figures, on the other hand, rely on an external optimization tool called Minerva [10], and there are no details in LowRes's article about how their frequency figures were achieved.
+
+> ℹ️ **Note**
+> 
+> Minerva was developed by the same team as HighPerf, specifically to address perceived limitations in Vivado’s frequency estimation. While this tool is potentially interesting, Minerva suffers from a lack of documentation and has not seen any updates since 2017 [11], possibly making it less realiable than the industry standard tooling provided by Vivado. 
 
 
-# Conclusion
+# 4. Conclusions
 
 This report presented a qualitative and quantitative comparison between two CRYSTALS-Dilithium RTL designs that are at opposite ends of the latency/resources trade-off: one, *HighPerf*, focuses on minimizing latency at the cost of a high resource usage; the other, *LowRes*, excels at the opposite, and provides even smaller cores that perform a subset of the algorithm operations.
 
 It must be noted that, *after* the previously mentioned changes made to HighPerf, it correctly executes the Dilithium algorithm for all vectors in the test suite, and has thus been determined to be a correct implementation, with the notable caveat of only signing messages up to 4GB. LowRes, on the other hand, still has *at least one* (known) bug in its design, affecting the correctness of the algorithm. This must obviously be addressed, if one intends to use this implementation in a practical scenario.
 
-Finally, we also draw attention to the fact that, while *HighPerf* provided accurate latency metrics in its original article, the same cannot be said for *LowRes*.
+Finally, we also draw attention to the fact that, both *HighPerf* and *LowRes* reported metrics in their original articles that, at times, deviate from the results reproduced in this work, whether in terms of latency or resource usage.
 
 # References
 
@@ -148,3 +160,7 @@ Finally, we also draw attention to the fact that, while *HighPerf* provided accu
 8. [CERG SHA3 Core Documentation](https://github.com/GMUCERG/SHAKE)
 
 9. [CRYSTALS-Dilithium NIST submission package for round 3](https://pq-crystals.org/dilithium/data/dilithium-submission-nist-round3.zip)
+
+10. [Minerva: Automated hardware optimization tool](https://ieeexplore.ieee.org/document/8279804)
+
+11. [Minerva user manual](https://cryptography.gmu.edu/athena/index.php?id=Minerva)
