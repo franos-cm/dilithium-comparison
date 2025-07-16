@@ -1,6 +1,6 @@
 # Overview
 
-This project briefly compares two designs that completely implement the CRYSTALS-Dilithium [1] algorithm on RTL. Some limitations of each design are mentioned, along with quantitative performance measurements.
+This project briefly compares two  RTL designs that fully implement the CRYSTALS-Dilithium [1] algorithm. Some important aspects of each design are highlighted, and quantitative performance measurements are provided.
 
 ## ⚠️ A note on correctness
 
@@ -16,7 +16,7 @@ The remaining bugs found, in both the designs, were mostly concerning the handsh
 
 # 1. Introduction
 
-Although a plethora of work exists detailing different hardware-accelerated implementations of Dilithium, the source code for them are tipically not found online. The only exceptions found are the two projects presented here: *A Hard Crystal - Implementing Dilithium on Reconfigurable Hardware* [2], and *High-Performance Hardware Implementation of CRYSTALS-Dilithium* [3]. These works follow somewhat different strategies in implementing Dilithium, makint it interesting to compare them, not only in terms of latency and resource usage, but also from a qualitative perspective.
+Although a plethora of work exists detailing different hardware-accelerated implementations of Dilithium, the source code for them are tipically not found online. The only exceptions found are the two projects presented here: *A Hard Crystal - Implementing Dilithium on Reconfigurable Hardware* [2], and *High-Performance Hardware Implementation of CRYSTALS-Dilithium* [3]. These works follow somewhat different strategies in implementing Dilithium, making it interesting to compare them, not only in terms of latency and resource usage, but also from a qualitative perspective.
 
 > ℹ️ **Note**
 > 
@@ -39,13 +39,13 @@ Specifically, LowRes is composed of three base designs — each capable of perfo
 
 This modular structure allows for projects which only need to perform one of the operations (for example, a system that is only interested in validating signatures), to reduce its resource usage.
 
-Each design itself also comes in three variants, one for each security level specified for Dilithium. This means that, although the difference between these variants are essentially that of internal buffer sizes, there is currently no option to select the security level at runtime.
+Each design itself also comes in three variants, one for each security level specified for Dilithium. This means that, although the difference between these variants is essentially that of internal buffer sizes, there is currently no option to select the security level at runtime.
 
-HighPerf, on the other hand, is a single unified design capable of performing all three Dilithium operations. Moreover, the security level for a given operation can be decided at runtime by use of the ```sec_level``` input signal.
+HighPerf, on the other hand, is a single unified design capable of performing all three Dilithium operations. Moreover, the security level for a given operation can be decided at runtime by use of the `sec_level` input signal.
 
 ## 2.2. Interfaces
 
-Considering the data throughput necessary for the operations in Dilithium, both cores are designed with a streaming interface similar to that of AXI-Stream [6], coupled with a side-band for certain control signals, such as ```start```, or ```sec_level``` (in the case of HighPerf).
+Considering the data throughput necessary for the operations in Dilithium, both cores are designed with a streaming interface similar to that of AXI-Stream [6], coupled with a side-band for certain control signals, such as `start`, or `sec_level` (in the case of HighPerf).
 
 One of the main differences between the two designs is that HighPerf has a 64-bit datapath, while LowRes uses a 32-bit one. This alone effectively doubles the latency of load and store operations in LowRes, when compared to HighPerf.
 
@@ -69,17 +69,17 @@ Dilithium's operations internally use a collision resistant hash function, both 
 
 As such, both designs include an implementation of a core that performs the Keccak family of functions [7]. This is somewhat important since the SHAKE operations are typically one of the bottlenecks for the Dilithium algorithm as a whole.
 
-Both designs execute a Keccak round in one cycle, and therefore finish the Keccak-f[1600] permutation in 24 cycles. Similarly, in both cases the Keccak state is implemented as a single 1600 bit register, with different values for ```(c, r)``` depending on which SHAKE operation is being performed.
+Both designs execute a Keccak round in one cycle, and therefore finish the Keccak-f[1600] permutation in 24 cycles. Similarly, in both cases the Keccak state is implemented as a single 1600 bit register, with different values for `(c, r)` depending on which SHAKE operation is being performed.
 
 LowRes's Keccak core has a very simple design, in which the state buffer is directly accessed after each permutation, both to load the next input block, and similarly to dump the next output block.
 
-HighPerf reduces the latency for these load and dump operations by pipelining the Keccak core design into three stages, as well as introducing one input buffer and one output buffer. As a result, the Keccak permutation can be executed while the next input block is being independently loaded, and the previous output block is being dumped.
+HighPerf reduces the latency for these load and dump operations by pipelining the Keccak core design into three stages, as well as introducing one input buffer and one output buffer. As a result, the Keccak permutation can be executed while the next input block is being loaded in parallel, and the previous output block is being dumped.
 
 Moreover, to maximize throughput even further, HighPerf instantiates three copies of its Keccak core, compared to the single Keccak core used in LowRes.
 
 However, **HighPerf's implementation of Keccak has one major limitation**. As specified in its documentation [8], the input and output sizes are determined by the first 64-bit word received by the core. For this reason, its input size is limited to the [0, 2³²] bits range, and its output size is limited to the [0, 2²⁸] bits range. The output size range is not relevant for Dilithium, given that all SHAKE operations need to produce a much lower amount of data than the upper bound specified. The input size range, however, means that **HighPerf's Dilithium core can only sign messages with at most 4GB of data**.
 
-This limitation can be easily fixed by having the interface include a signal similar to AXI-Stream's ```TLAST```, whose purpose LowRes mimics by overloading the ```TREADY``` signal asserted by the transmitter device. As such, LowRes has no similar message size limit. I eventually plan on including this change in [my own version of a high-performance Keccak core](https://github.com/franos-cm/shake-sv), which is heavily inspired by [8].
+This limitation can be easily fixed by having the interface include a signal similar to AXI-Stream's `TLAST`, whose purpose LowRes mimics by overloading the `TREADY` signal asserted by the transmitter device. As such, LowRes has no similar message size limit. I eventually plan on including this change in [my own version of a high-performance Keccak core](https://github.com/franos-cm/shake-sv), which is heavily inspired by [8].
 
 
 ## 2.5. Test suite
@@ -97,31 +97,37 @@ Finally, as previously mentioned, since LowRes allows for separating load and st
 
 # 3. Results
 
-Both designs had their behaviours simulated using the Vivado Simulator 2024.2. Table 1, Table 2, and Table 3 exhibit, repectively, the cycle latencies observed for `KEYGEN`, `SIGN`, and `VERIFY`.
+Both designs had their behaviours simulated using the Vivado Simulator 2024.2. Table 1, Table 2, and Table 3 exhibit, respectively, the mean cycle latencies observed for `KEYGEN`, `SIGN`, and `VERIFY`. In order to maintain feasible simulation runtimes, the number of test vectors was limited to $N=10$.
 
 ![Table1](docs/table1.png)
+
+![Table2](docs/table2.png)
 
 ![Table3](docs/table3.png)
 
 
-For the `SIGN` operation, inkeeping with the standard adopted by articles [2] and [3], we measure both the best case (i.e. the signature is accepted in the first try) performance, and the average case performance. We also show the estimated latency for each rejection cycle.
+For the `SIGN` operation, in keeping with the standard adopted by articles [2] and [3], we measure both the best case performance (i.e. the signature is accepted in the first try), and the mean case performance.
 
-It is then possible to compare, in Table 4, the latencies observed during these simulations, with the ones reported on the original works.
+While the best-case `SIGN` latency remained relatively stable across the $N=10$ test cases, the mean latency exhibited substantial variance, due to an equally significant variance in the number of acceptance tries accross the test cases. Consequently, the mean `SIGN` latency derived from such a small sample is not considered a reliable performance indicator. Future simulations with larger values of $N$ are necessary to obtain a more statistically robust estimate for this specific metric.
 
-[Table4]
+It is then possible to compare, as shown in Table 4, the latencies observed during these simulations, with the ones reported on the original works.
 
-The results obtained for HighPerf are statistically consistent with the ones reported in the original paper. In contrast, the latency reported for LowRes appears significantly underestimated, likely due to the omission of data load times prior to execution.
+![Table4](docs/table4.png)
+
+The results obtained for HighPerf are statistically consistent with the ones reported in the original paper. In contrast, the latency reported for LowRes appears significantly underestimated. In many cases, this is likely due to the omission of data load times prior to execution.
 
 While excluding data load times may be justified in certain scenarios — for example, when verifying multiple signatures using the same public key — this implicitly assumes a best-case situation that favors LowRes in comparison to HighPerf. In practice, such reuse is often infrequent, particularly for operations like KEYGEN, making the reported latencies less representative of its performance.
 
-Finally, the FPGA resources needed for each design are shown in Table 5. Since HighPerf uses a single design for all security levels, the resources needed for all levels are, evidently, constant.
+Lastly, the FPGA resources needed for each design are shown in Table 5. Since HighPerf uses the same design for all security levels, its resource usage remains constant across all levels.
 
 
 # Conclusion
 
-We have presented a qualitative and quantitative comparison between two CRYSTALS-Dilithium RTL designs that are at opposite ends of the latency/resources trade-off: one, *HighPerf*, focuses on minimizing latency at the cost of a high resource usage; the other, *LowRes*, excels at the opposite, and provides even smaller cores that perform a subset of the algorithm operations.
+This report presented a qualitative and quantitative comparison between two CRYSTALS-Dilithium RTL designs that are at opposite ends of the latency/resources trade-off: one, *HighPerf*, focuses on minimizing latency at the cost of a high resource usage; the other, *LowRes*, excels at the opposite, and provides even smaller cores that perform a subset of the algorithm operations.
 
-It must be noted that, after the previously mentioned changes made to HighPerf, it correctly executes the Dilithium algorithm for all vectors in the test suite, and has thus been determined to be a correct implementation, with the notable caveat of only signing messages up to 4GB. LowRes, on the other hand, still has *at least one* (known) bug in its design, affecting the correctness of the algorithm. This must obviously be fixed, if one intends to use this implementation in a practical scenario.
+It must be noted that, *after* the previously mentioned changes made to HighPerf, it correctly executes the Dilithium algorithm for all vectors in the test suite, and has thus been determined to be a correct implementation, with the notable caveat of only signing messages up to 4GB. LowRes, on the other hand, still has *at least one* (known) bug in its design, affecting the correctness of the algorithm. This must obviously be addressed, if one intends to use this implementation in a practical scenario.
+
+Finally, we also draw attention to the fact that, while *HighPerf* provided accurate latency metrics in its original article, the same cannot be said for *LowRes*.
 
 # References
 
