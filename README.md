@@ -10,7 +10,7 @@ Notably, in the case of the design in [2], a small but critical bug related to t
 
 Moreover, another bug was found in the design in [2], concerning an out-of-bounds memory access when simulating signature verifications, specifically using the security level 3 parameters. The memory accesses were changed so as to allow the simulation to complete. However, it is possible that this quick fix has not corrected the underlying bug.
 
-The remaining bugs found, in both the designs, were mostly concerning the handshake protocol used. These were duly fixed, as briefly mentioned in Section 2.2.
+The remaining bugs found, in both the designs, were mostly concerning data transfer operations. These were duly fixed, as briefly mentioned in Sections 2.2 and 2.3.
 
 
 
@@ -55,9 +55,11 @@ For HighPerf, the most straightforward solution was to introduce a buffer that c
 
 ## 2.3. Pipelining and data reusability
 
-The two cores have different ways of mitigating the latency for the Dilithium operations. Notably, HighPerf has a highly pipelined design structure that allows for simultaneously executing independent steps (reading the original paper is recommended for more details).
+The two cores have different ways of mitigating the latency for the Dilithium operations. Notably, HighPerf has a highly pipelined design that allows for simultaneously executing independent steps (reading the original paper is recommended for more details).
 
-LowRes's design implements significantly less pipelining. However, while HighPerf's design is based on streaming all the data necessary for each Dilithium operation, LowRes allows for performing intermediate loading and storing operations separately from the main processing steps. This then allows for reusing data across different operations, which reduces data transfer times.
+**HighPerf's pipeline originally had a bug**, in which it did not account for backpressure when loading some of the necessary data; it assumed the input would be completely available under a certain amount of time after initiating the operation. It did not stall the pipeline if that was not the case, thus producing incorrect output values. This, of course, would reduce the usefulness of the core in real life scenarios, such as when loading a long message in chunks. The necessary stalls (or at least, the ones identified) were introduced in HighPerf's code provided here.
+
+LowRes's design implements significantly less pipelining. On the other hand, while HighPerf's design is based on streaming all the data necessary for each Dilithium operation, LowRes allows for performing intermediate loading and storing operations separately from the main processing steps. This then allows for reusing data across different operations, which reduces data transfer times.
 
 For example, suppose we wanted to compute several signatures using the same secret key, HighPerf requires loading the key for every signature, while LowRes would only load the key when performing the first signature, and reuse that value for the subsequent ones.
 

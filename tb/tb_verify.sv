@@ -6,7 +6,7 @@ module tb_verify;
     localparam logic[1:0] MODE = VERIFY_MODE;
 
     logic tb_rst, failed;
-    integer ctr, tv_ctr;
+    integer ctr, tv_ctr, idle_ctr;
     // Since dilithium-low-res loads/dumps the data as separate
     // operations, it is useful to keep track of both also separately.
     // These counters are thus only valid for dilithium-low-res.
@@ -34,7 +34,10 @@ module tb_verify;
     // NOTE: different Dilithiums will have same states, but different transitions
     typedef enum logic [3:0] {
         S_INIT, S_START, LOAD_RHO, LOAD_C, LOAD_Z, LOAD_T1,
-        LOAD_MLEN, LOAD_MSG, LOAD_H, UNLOAD_RESULT, S_STOP
+        LOAD_MLEN, LOAD_MSG, LOAD_H, UNLOAD_RESULT, S_STOP,
+        // NOTE: the idle states are unnecessary, but simulate backpressure,
+        //       which is relevant for testing the designs under different cenarios
+        S_IDLE_1, S_IDLE_2
     } state_t;
     state_t state;
 
@@ -100,6 +103,7 @@ module tb_verify;
             failed          <= 0;
             rst             <= 1;
             state           <= S_INIT;
+            idle_ctr       <= 0;
         end
 
         else begin
@@ -189,12 +193,25 @@ module tb_verify;
                 end
                 LOAD_MLEN: begin
                     valid_i <= 1;
+                    // NOTE: interestingly, this op zero-extends data_i on the left,
+                    //       while slicing with [ctr*W +: W] would X/U-extend on the right.
+                    //       This is somewhat relevant when porting the designs for the real world.
                     data_i <= msg_len[tv_ctr];
                 
                     if (ready_i) begin
                         data_i <= msg[tv_ctr][0 +: W];
-                        state  <= LOAD_MSG;
+                        state  <= S_IDLE_1;
+                        valid_i <= 0; // delete if not using IDLE states
                         load_msg_time = $time;
+                    end
+                end
+                S_IDLE_1: begin
+                    valid_i <= 0;
+                    ready_o <= 0;
+                    idle_ctr <= idle_ctr + 1;
+                    if (idle_ctr == 10000) begin
+                        state <= LOAD_MSG;
+                        idle_ctr <= 0;
                     end
                 end
                 LOAD_MSG: begin
@@ -204,15 +221,24 @@ module tb_verify;
                     if (ready_i) begin
                         if ((ctr+1)*W >= msg_len[tv_ctr]*8) begin
                             ctr     <= 0;
-                            state   <= HIGH_PERF ? LOAD_H : UNLOAD_RESULT;
+                            state   <= HIGH_PERF ? S_IDLE_2 : UNLOAD_RESULT;
                             data_i  <= h[tv_ctr][0 +: W];
-                            valid_i <= HIGH_PERF ? 1 : 0;
+                            valid_i <= 0; // change to (HIGH_PERF ? 1 : 0) if not using IDLE states
                             ready_o <= HIGH_PERF ? 0 : 1;
                             exec_time = $time;
                         end else begin
                             ctr    <= ctr + 1;
                             data_i <= msg[tv_ctr][(ctr+1)*W +: W];
                         end
+                    end
+                end
+                S_IDLE_2: begin
+                    valid_i <= 0;
+                    ready_o <= 0;
+                    idle_ctr <= idle_ctr + 1;
+                    if (idle_ctr == 10000) begin
+                        state <= LOAD_H;
+                        idle_ctr <= 0;
                     end
                 end
                 LOAD_H: begin
