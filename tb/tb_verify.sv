@@ -4,6 +4,7 @@ import tb_pkg::*;
 
 module tb_verify;
     localparam logic[1:0] MODE = VERIFY_MODE;
+    localparam int IDLE_CYCLES_NUM = 10000;
 
     logic tb_rst, failed;
     integer ctr, tv_ctr, idle_ctr;
@@ -209,7 +210,7 @@ module tb_verify;
                     valid_i <= 0;
                     ready_o <= 0;
                     idle_ctr <= idle_ctr + 1;
-                    if (idle_ctr == 10000) begin
+                    if (idle_ctr == IDLE_CYCLES_NUM) begin
                         state <= LOAD_MSG;
                         idle_ctr <= 0;
                     end
@@ -236,7 +237,7 @@ module tb_verify;
                     valid_i <= 0;
                     ready_o <= 0;
                     idle_ctr <= idle_ctr + 1;
-                    if (idle_ctr == 10000) begin
+                    if (idle_ctr == IDLE_CYCLES_NUM) begin
                         state <= LOAD_H;
                         idle_ctr <= 0;
                     end
